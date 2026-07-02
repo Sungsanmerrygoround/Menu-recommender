@@ -1,20 +1,33 @@
 @import "tailwindcss";
 
+/* ===== 디자인 토큰 v3 (글래스 리파인드) =====
+   primary gradient : #3182F6 -> #1FA39D (135deg)
+   ink #17202B / sub #5A6774 / muted(장식 전용) #7D8894
+   accent small text: #1B5FC4 / accent teal: #1F8A86
+   bg gradient      : #E9F3FF -> #F5FBF7
+   glass 3단계      : surface(.6+blur16) / card(.72+blur20)
+   shadow 3단계     : rgba(70,120,180,.08) 리스트 / .12 패널 / .18 히어로
+   radius           : card 28 / panel 24 / list-card 20 / button 14~20 / chip·pill 999
+   type scale       : 11 / 12 / 14 / 16 / 18 / 24 / 32 (+ nav 11.5 예외)
+*/
 @theme {
-  --color-background: #f9fafb;
-  --color-card: #ffffff;
+  --color-ink: #17202b;
+  --color-sub: #5a6774;
+  --color-muted: #7d8894;
+  --color-blue-acc: #1b5fc4;
+  --color-blue-btn: #1f6fe0;
+  --color-teal-acc: #1f8a86;
+  --color-grad-start: #3182f6;
+  --color-grad-end: #1fa39d;
+
+  /* 이전 이름 호환 (값만 v3로 갱신) */
+  --color-text-main: #17202b;
+  --color-text-sub: #5a6774;
   --color-primary: #3182f6;
-  --color-primary-dark: #1b64da;
-  --color-text-main: #191f28;
-  --color-text-sub: #8b95a1;
-  --color-divider: #f2f4f6;
 
   --font-sans: "Pretendard Variable", Pretendard, -apple-system,
     BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI",
     "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
-
-  --radius-card: 18px;
-  --radius-button: 14px;
 
   --animate-card-in: card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
   --animate-sheet-up: sheet-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -63,14 +76,114 @@
 }
 
 html {
-  background-color: var(--color-background);
+  background-color: #e9eef5;
 }
 
 body {
   font-family: var(--font-sans);
-  color: var(--color-text-main);
+  color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
+}
+
+/* ---- 글래스 토큰 ---- */
+.glass-surface {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+.glass-card {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ---- 그라디언트 토큰 ---- */
+.grad-primary {
+  background-image: linear-gradient(135deg, #3182f6, #1fa39d);
+}
+.grad-text {
+  background-image: linear-gradient(90deg, #3182f6, #1fa39d);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.grad-tint {
+  background-image: linear-gradient(
+    135deg,
+    rgba(49, 130, 246, 0.14),
+    rgba(31, 163, 157, 0.14)
+  );
+}
+
+/* ---- 그림자 3단계 + 버튼/타일 ---- */
+.shadow-list-lv {
+  box-shadow: 0 6px 18px rgba(70, 120, 180, 0.08);
+}
+.shadow-panel-lv {
+  box-shadow: 0 10px 30px rgba(70, 120, 180, 0.12);
+}
+.shadow-hero-lv {
+  box-shadow: 0 20px 44px rgba(70, 120, 180, 0.18);
+}
+.shadow-btn-grad {
+  box-shadow: 0 8px 20px rgba(42, 160, 200, 0.32);
+}
+.shadow-chip-on {
+  box-shadow: 0 5px 14px rgba(42, 160, 200, 0.38);
+}
+
+/* 이모지 타일: 흰 바탕 + 그라디언트 링 */
+.tile-ring {
+  background: linear-gradient(#fff, #fff) padding-box,
+    linear-gradient(135deg, #3182f6, #1fa39d) border-box;
+  border: 2px solid transparent;
+  box-shadow: 0 6px 16px rgba(42, 160, 200, 0.18);
+}
+
+/* ---- 배경 블롭 ---- */
+.blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(58px);
+  pointer-events: none;
+}
+.blob-1 {
+  width: 240px;
+  height: 240px;
+  background: #7fb5ff;
+  top: -70px;
+  right: -70px;
+  opacity: 0.55;
+}
+.blob-2 {
+  width: 190px;
+  height: 190px;
+  background: #7de3d0;
+  top: 330px;
+  left: -80px;
+  opacity: 0.5;
+}
+.blob-3 {
+  width: 170px;
+  height: 170px;
+  background: #a7c9ff;
+  bottom: 40px;
+  right: -60px;
+  opacity: 0.3;
+}
+
+/* 시각 크기는 유지하고 터치 타겟만 44px로 확장 */
+.hit-44 {
+  position: relative;
+}
+.hit-44::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
 }
 
 /* 필터 칩 가로 스크롤 영역에서 스크롤바 숨김 */

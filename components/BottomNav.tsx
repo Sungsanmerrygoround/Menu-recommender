@@ -41,19 +41,21 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-30 flex justify-center">
-      <div className="flex w-full max-w-[480px] border-t border-divider bg-white pb-[env(safe-area-inset-bottom)]">
+    <nav className="fixed inset-x-0 bottom-3.5 z-30 flex justify-center px-3.5">
+      <div className="glass-card flex w-full max-w-[452px] rounded-full p-[7px] shadow-[0_10px_28px_rgba(70,120,180,.18)]">
         {TABS.map(({ href, label, Icon }) => {
           const active = pathname === href;
           return (
             <Link
               key={href}
               href={href}
-              className={`press-effect flex flex-1 flex-col items-center gap-1 py-2.5 text-[11px] font-medium ${
-                active ? "text-primary" : "text-text-sub"
+              className={`press-effect flex flex-1 flex-col items-center gap-0.5 rounded-full py-[7px] text-[11.5px] font-bold ${
+                active
+                  ? "bg-white text-blue-btn shadow-[0_3px_10px_rgba(70,120,180,.16)]"
+                  : "text-sub"
               }`}
             >
-              <Icon className="h-6 w-6" />
+              <Icon className="h-[22px] w-[22px]" />
               {label}
             </Link>
           );

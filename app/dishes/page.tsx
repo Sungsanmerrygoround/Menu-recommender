@@ -9,6 +9,7 @@ import EmptyState from "@/components/EmptyState";
 import SkeletonList from "@/components/Skeleton";
 import { useToast } from "@/components/Toast";
 import { daysBetween, todayString } from "@/lib/date-utils";
+import { CATEGORY_EMOJI } from "@/lib/emoji";
 import {
   addDish,
   deleteDish,
@@ -95,13 +96,19 @@ export default function DishesPage() {
   }
 
   return (
-    <main className="px-5 pb-8 pt-14">
-      <h1 className="text-[24px] font-bold">내 요리</h1>
+    <main className="px-5 pb-8 pt-10">
+      <span className="glass-surface inline-flex items-center gap-1.5 rounded-full px-[13px] py-[7px] text-[12px] font-bold text-blue-acc">
+        🍳 {dishes ? `${dishes.length}개의 요리` : "내 요리 관리"}
+      </span>
+      <h1 className="mt-3 text-[24px] font-black tracking-[-0.02em] text-ink">
+        내 요리
+      </h1>
 
       {/* 검색창 */}
-      <div className="mt-5">
+      <div className="glass-surface mt-4 flex items-center gap-2 rounded-2xl px-4">
+        <span className="text-[14px]">🔍</span>
         <input
-          className="w-full rounded-[14px] bg-[#f2f4f6] px-4 py-3.5 text-[15px] placeholder:text-[#b0b8c1] outline-none focus:ring-2 focus:ring-primary/40"
+          className="h-[50px] w-full bg-transparent text-[16px] text-ink outline-none placeholder:text-muted"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="요리 이름 검색"
@@ -153,19 +160,26 @@ export default function DishesPage() {
           filtered.map((dish) => (
             <div
               key={dish.id}
-              className="press-effect flex cursor-pointer items-center gap-3 rounded-[18px] bg-white p-4"
+              className="glass-card shadow-list-lv press-effect flex cursor-pointer items-center gap-3 rounded-[20px] px-4 py-3.5"
               onClick={() => setEditing(dish)}
             >
+              <div className="tile-ring flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-[24px]">
+                {CATEGORY_EMOJI[dish.category]}
+              </div>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[16px] font-semibold">
+                <p className="truncate text-[16px] font-extrabold text-ink">
                   {dish.name}
                 </p>
-                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                  <Badge tone="blue">{dish.category}</Badge>
-                  <Badge>{dish.effort}</Badge>
-                  {dish.cook_time != null && <Badge>{dish.cook_time}분</Badge>}
+                <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                  <Badge tone="blue" size="sm">
+                    {dish.category}
+                  </Badge>
+                  <Badge size="sm">{dish.effort}</Badge>
+                  {dish.cook_time != null && (
+                    <Badge size="sm">{dish.cook_time}분</Badge>
+                  )}
                 </div>
-                <p className="mt-1.5 text-[13px] text-text-sub">
+                <p className="mt-1 text-[12px] font-semibold text-sub">
                   {lastEatenLabel(dish.last_eaten_at)}
                 </p>
               </div>
@@ -175,7 +189,7 @@ export default function DishesPage() {
                   e.stopPropagation();
                   handleEat(dish);
                 }}
-                className="press-effect shrink-0 rounded-[12px] bg-[#e8f3ff] px-3.5 py-2.5 text-[13px] font-semibold text-primary"
+                className="press-effect hit-44 shrink-0 rounded-[14px] border border-blue-btn/[.28] px-[13px] py-[9px] text-[12px] font-extrabold text-blue-btn"
               >
                 먹었어요
               </button>
@@ -185,12 +199,12 @@ export default function DishesPage() {
       </div>
 
       {/* 플로팅 + 버튼 */}
-      <div className="pointer-events-none fixed bottom-[88px] left-1/2 z-30 flex w-full max-w-[480px] -translate-x-1/2 justify-end px-5">
+      <div className="pointer-events-none fixed bottom-[92px] left-1/2 z-30 flex w-full max-w-[480px] -translate-x-1/2 justify-end px-[18px]">
         <button
           type="button"
           onClick={() => setAddOpen(true)}
           aria-label="요리 추가"
-          className="press-effect pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full bg-primary text-[28px] font-light text-white shadow-lg shadow-primary/30"
+          className="grad-primary press-effect pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full text-[26px] font-light text-white shadow-[0_10px_24px_rgba(42,160,200,.42)]"
         >
           +
         </button>

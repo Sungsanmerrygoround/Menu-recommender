@@ -52,12 +52,12 @@ export default function DishForm({
   }
 
   const inputClass =
-    "w-full rounded-[14px] bg-[#f2f4f6] px-4 py-3.5 text-[15px] text-text-main placeholder:text-[#b0b8c1] outline-none focus:ring-2 focus:ring-primary/40";
+    "w-full rounded-[14px] bg-[#f1f4f8] px-4 py-3.5 text-[16px] text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-grad-start/40";
 
   return (
     <div className="flex flex-col gap-5">
       <div>
-        <label className="mb-2 block text-[13px] font-semibold text-text-sub">
+        <label className="mb-2 block text-[12px] font-extrabold text-sub">
           이름
         </label>
         <input
@@ -69,7 +69,7 @@ export default function DishForm({
       </div>
 
       <div>
-        <label className="mb-2 block text-[13px] font-semibold text-text-sub">
+        <label className="mb-2 block text-[12px] font-extrabold text-sub">
           종류
         </label>
         <div className="flex flex-wrap gap-2">
@@ -85,7 +85,7 @@ export default function DishForm({
       </div>
 
       <div>
-        <label className="mb-2 block text-[13px] font-semibold text-text-sub">
+        <label className="mb-2 block text-[12px] font-extrabold text-sub">
           노력
         </label>
         <div className="flex flex-wrap gap-2">
@@ -101,7 +101,7 @@ export default function DishForm({
       </div>
 
       <div>
-        <label className="mb-2 block text-[13px] font-semibold text-text-sub">
+        <label className="mb-2 block text-[12px] font-extrabold text-sub">
           소요 시간 (분)
         </label>
         <input
@@ -116,7 +116,7 @@ export default function DishForm({
       </div>
 
       <div>
-        <label className="mb-2 block text-[13px] font-semibold text-text-sub">
+        <label className="mb-2 block text-[12px] font-extrabold text-sub">
           태그
         </label>
         <input
@@ -131,7 +131,7 @@ export default function DishForm({
         type="button"
         onClick={handleSubmit}
         disabled={!valid || submitting}
-        className="press-effect mt-1 h-[54px] w-full rounded-[14px] bg-primary text-[16px] font-bold text-white disabled:bg-[#d1d6db]"
+        className="press-effect grad-primary shadow-btn-grad mt-1 h-[54px] w-full rounded-2xl text-[16px] font-extrabold text-white disabled:opacity-40 disabled:shadow-none"
       >
         {submitting ? "저장 중..." : submitLabel}
       </button>
@@ -140,7 +140,7 @@ export default function DishForm({
         <button
           type="button"
           onClick={onDelete}
-          className="press-effect -mt-1 h-[48px] w-full rounded-[14px] text-[15px] font-semibold text-[#f04452]"
+          className="press-effect -mt-1 h-[48px] w-full rounded-2xl text-[14px] font-bold text-[#e5484d]"
         >
           삭제하기
         </button>

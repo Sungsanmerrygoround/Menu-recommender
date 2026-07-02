@@ -1,16 +1,23 @@
 interface BadgeProps {
   children: React.ReactNode;
   tone?: "blue" | "gray";
+  size?: "md" | "sm";
 }
 
-export default function Badge({ children, tone = "gray" }: BadgeProps) {
+export default function Badge({
+  children,
+  tone = "gray",
+  size = "md",
+}: BadgeProps) {
+  const toneClass =
+    tone === "blue"
+      ? "grad-tint text-blue-acc"
+      : "bg-white/80 border border-white/95 text-[#44515f]";
+  const sizeClass =
+    size === "sm" ? "px-2 py-[3px] text-[11px]" : "px-2.5 py-[5px] text-[12px]";
   return (
     <span
-      className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[12px] font-medium ${
-        tone === "blue"
-          ? "bg-[#e8f3ff] text-primary"
-          : "bg-[#f2f4f6] text-[#4e5968]"
-      }`}
+      className={`inline-flex items-center rounded-full font-bold ${toneClass} ${sizeClass}`}
     >
       {children}
     </span>
