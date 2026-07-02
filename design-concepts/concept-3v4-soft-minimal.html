@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개선안 v4 · 소프트 미니멀 프레시</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"Pretendard Variable",Pretendard,sans-serif; }
+  body { background:#e9edeb; }
+  .banner { text-align:center; font-size:12px; color:#77828c; padding:10px; }
+  .app { max-width:400px; margin:0 auto; min-height:96vh; background:#fafcfb; position:relative;
+         padding-bottom:88px; border-radius:24px; overflow:hidden; box-shadow:0 10px 40px rgba(40,70,60,.1); }
+  main { padding:52px 22px 24px; position:relative; }
+
+  .greet { font-size:14px; font-weight:700; color:#0ea893; }
+  h1 { font-size:30px; font-weight:800; line-height:1.32; color:#1a2028; margin-top:10px; letter-spacing:-.7px; }
+  h1 u { text-decoration:none; box-shadow:inset 0 -10px 0 #d8f3ee; }
+
+  .panel { margin-top:26px; background:#fff; border:1px solid #edf1f0; border-radius:20px; padding:20px;
+           box-shadow:0 2px 8px rgba(26,32,40,.03); }
+  .label { font-size:12px; font-weight:800; color:#8d99a3; letter-spacing:.6px; margin-bottom:10px; }
+  .divider { height:1px; background:#f0f4f2; margin:18px 0; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { height:38px; padding:0 15px; border-radius:12px; font-size:14px; font-weight:600;
+          border:1px solid #e3e9e7; background:#fff; color:#5a6660; }
+  .chip.on { background:#0ea893; color:#fff; border-color:#0ea893; font-weight:700; }
+
+  .cta { width:100%; height:56px; margin-top:24px; border:none; border-radius:16px; font-size:17px; font-weight:800;
+         color:#fff; background:#0ea893; box-shadow:0 8px 20px rgba(14,168,147,.25); }
+
+  .card { margin-top:24px; background:#fff; border:1px solid #edf1f0; border-radius:24px; padding:24px;
+          box-shadow:0 8px 24px rgba(26,32,40,.06); animation:pop .4s cubic-bezier(.16,1,.3,1); }
+  @keyframes pop { from { opacity:0; transform:scale(.97) translateY(8px);} to { opacity:1; transform:none;} }
+  .card-label { font-size:12.5px; font-weight:800; color:#0ea893; letter-spacing:.6px; }
+  .dish-row { display:flex; align-items:center; gap:14px; margin-top:14px; }
+  .dish-emoji { width:60px; height:60px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+                font-size:32px; background:#f3f8f6; }
+  .dish-name { font-size:26px; font-weight:800; color:#1a2028; letter-spacing:-.6px; }
+  .badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+  .badge { font-size:12px; font-weight:700; padding:5px 10px; border-radius:8px; background:#f4f7f6; color:#5a6660; }
+  .badge.cat { background:#e6f6f3; color:#0b8a79; }
+  .last { display:flex; align-items:center; gap:8px; margin-top:16px; padding:12px 14px; border-radius:12px;
+          background:#f0faf7; font-size:13.5px; font-weight:700; color:#0b8a79; }
+  .btn-p { width:100%; height:54px; margin-top:18px; border:none; border-radius:14px; font-size:16px; font-weight:800;
+           color:#fff; background:#0ea893; box-shadow:0 6px 16px rgba(14,168,147,.22); }
+  .btn-s { width:100%; height:52px; margin-top:10px; border:1px solid #e3e9e7; border-radius:14px; font-size:15px;
+           font-weight:700; background:#fff; color:#5a6660; }
+
+  nav { position:absolute; bottom:0; left:0; right:0; background:#fff; border-top:1px solid #f0f4f2; display:flex; padding:8px 12px 14px; }
+  nav a { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; font-weight:700;
+          color:#9aa5a1; text-decoration:none; padding:6px 0; border-radius:14px; }
+  nav a.on { color:#0ea893; background:#e6f6f3; margin:0 6px; }
+  nav svg { width:23px; height:23px; }
+
+  .mk { position:absolute; z-index:10; width:22px; height:22px; border-radius:50%; background:#1f2430; color:#fff;
+        font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;
+        box-shadow:0 2px 6px rgba(0,0,0,.3); }
+  body.no-mk .mk { display:none; }
+  .mk-toggle { position:fixed; top:10px; right:12px; z-index:20; font-size:12px; font-weight:700; padding:6px 10px;
+               border-radius:999px; border:1px solid #c3cedb; background:#fff; color:#44515f; cursor:pointer; }
+</style>
+</head>
+<body>
+<button class="mk-toggle" onclick="document.body.classList.toggle('no-mk')">번호 표시 켜기/끄기</button>
+<p class="banner">개선안 v4 · 소프트 미니멀 프레시 — 장식을 덜어내고 여백/타이포/단일 컬러로 정돈</p>
+<div class="app">
+  <main>
+    <span class="mk" style="top:48px; left:6px;">1</span>
+    <p class="greet">· 오늘의 식탁</p>
+    <h1>오늘 뭐<br><u>해드실래요?</u></h1>
+
+    <span class="mk" style="top:210px; left:6px;">2</span>
+    <div class="panel">
+      <p class="label">종류</p>
+      <div class="chips">
+        <button class="chip on">한식</button><button class="chip">중식</button><button class="chip">양식</button><button class="chip">일식</button><button class="chip">분식/기타</button>
+      </div>
+      <div class="divider"></div>
+      <p class="label">노력</p>
+      <div class="chips">
+        <button class="chip on">쉬움</button><button class="chip">중간</button><button class="chip">어려움</button>
+      </div>
+    </div>
+
+    <span class="mk" style="top:512px; left:6px;">3</span>
+    <button class="cta">추천받기</button>
+
+    <span class="mk" style="top:606px; left:6px;">4</span>
+    <div class="card">
+      <p class="card-label">오늘의 추천</p>
+      <div class="dish-row">
+        <div class="dish-emoji">🍲</div>
+        <h2 class="dish-name">김치찌개</h2>
+      </div>
+      <div class="badges">
+        <span class="badge cat">한식</span><span class="badge">쉬움</span><span class="badge">30분</span><span class="badge">#국물</span><span class="badge">#밥</span>
+      </div>
+      <span class="mk" style="top:836px; left:6px;">5</span>
+      <p class="last">🕐 마지막으로 먹은 지 <b>12일 전</b></p>
+      <button class="btn-p">이거 먹었어요 ✓</button>
+      <button class="btn-s">다른 메뉴 볼래요</button>
+    </div>
+  </main>
+  <span class="mk" style="bottom:52px; left:6px;">6</span>
+  <nav>
+    <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>홈</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v7a2 2 0 0 0 2 2h0V3"/><path d="M11 3v18"/><path d="M17 3c-1.5 1.5-2 4-2 6v3h3v9"/></svg>내 요리</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>기록</a>
+  </nav>
+</div>
+</body>
+</html>

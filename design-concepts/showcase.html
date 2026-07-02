@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오늘 뭐 해먹지 — 개선안 3종 쇼케이스</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"Pretendard Variable",Pretendard,sans-serif; }
+  body { background:#eef1f5; padding:28px 24px 40px; }
+  h1 { font-size:24px; font-weight:800; color:#191f28; }
+  p.sub { font-size:14px; color:#6b7684; margin-top:6px; line-height:1.6; }
+  p.sub b { color:#3182f6; }
+  .row { display:flex; gap:22px; margin-top:24px; overflow-x:auto; padding-bottom:16px; align-items:flex-start; }
+  .col { flex:0 0 404px; }
+  .col h2 { font-size:16px; font-weight:800; color:#191f28; }
+  .col .tag { display:inline-block; font-size:11px; font-weight:800; padding:3px 8px; border-radius:6px; margin-left:6px; vertical-align:2px; }
+  .tag.asis { background:#e5e8eb; color:#6b7684; }
+  .tag.v2 { background:#e8f3ff; color:#3182f6; }
+  .tag.v3 { background:#e0f4f1; color:#149286; }
+  .tag.v4 { background:#e6f6f3; color:#0b8a79; }
+  .col ul { list-style:none; margin:8px 0 12px; display:flex; flex-direction:column; gap:4px; }
+  .col li { font-size:12.5px; color:#4e5968; line-height:1.5; display:flex; gap:6px; }
+  .col li .n { flex-shrink:0; width:17px; height:17px; border-radius:50%; background:#1f2430; color:#fff;
+               font-size:10.5px; font-weight:800; display:flex; align-items:center; justify-content:center; margin-top:2px; }
+  iframe { width:404px; height:930px; border:1px solid #dde1e6; border-radius:20px; background:#fff; }
+  .min-h { min-height:120px; }
+</style>
+</head>
+<body>
+  <h1>🍚 오늘 뭐 해먹지 — 컨셉 3 개선안 3종</h1>
+  <p class="sub">
+    컨셉 3(프레시 글래스)을 베이스로 서로 다른 방향의 개선안 3개입니다. 가로 스크롤로 비교하세요.<br>
+    피드백은 <b>"v3-② 필터는 좋은데 v2-⑥ 탭바로 바꿔줘"</b>처럼 버전-번호로 말씀해주시면 조합해서 반영할게요. (화면 속 검은 번호는 우측 상단 버튼으로 끌 수 있어요)
+  </p>
+  <div class="row">
+    <div class="col">
+      <h2>AS-IS<span class="tag asis">컨셉 3 원안</span></h2>
+      <ul class="min-h"><li>기준점 — 지금 골라주신 원안입니다.</li></ul>
+      <iframe src="concept-3-fresh-glass.html"></iframe>
+    </div>
+    <div class="col">
+      <h2>개선안 v2<span class="tag v2">글래스 리파인드</span></h2>
+      <ul class="min-h">
+        <li><span class="n">1</span>유리 칩 인사말 + 타이틀 30px, 핵심 문구만 그라디언트</li>
+        <li><span class="n">2</span>필터를 유리 패널로 묶고 선택 칩에 ✓</li>
+        <li><span class="n">3</span>CTA 확대(58px) + 그림자 강화</li>
+        <li><span class="n">4</span>그라디언트 링 이모지 타일 + 요리명 27px</li>
+        <li><span class="n">5</span>"마지막으로 먹은 지"를 유리 스트립으로</li>
+        <li><span class="n">6</span>떠 있는 알약형 유리 탭바</li>
+      </ul>
+      <iframe src="concept-3v2-refined.html"></iframe>
+    </div>
+    <div class="col">
+      <h2>개선안 v3<span class="tag v3">딥 아쿠아 히어로</span></h2>
+      <ul class="min-h">
+        <li><span class="n">1</span>상단 전체를 블루→민트 컬러 블록(히어로)으로</li>
+        <li><span class="n">2</span>필터 칩을 히어로 위에 — 선택 칩은 흰색 반전</li>
+        <li><span class="n">3</span>밝은 시트가 히어로를 겹쳐 올라오는 구조 + CTA</li>
+        <li><span class="n">4</span>카드는 화이트 솔리드로 대비 극대화</li>
+        <li><span class="n">5</span>민트 틴트 정보 스트립</li>
+        <li><span class="n">6</span>기본형 탭바 (컬러는 상단에 집중)</li>
+      </ul>
+      <iframe src="concept-3v3-aqua-hero.html"></iframe>
+    </div>
+    <div class="col">
+      <h2>개선안 v4<span class="tag v4">소프트 미니멀</span></h2>
+      <ul class="min-h">
+        <li><span class="n">1</span>그라디언트 대신 형광펜 밑줄 포인트, 여백 넉넉히</li>
+        <li><span class="n">2</span>화이트 카드 패널 + 구분선, 사각 칩</li>
+        <li><span class="n">3</span>단일 틸 그린 컬러의 솔리드 CTA</li>
+        <li><span class="n">4</span>장식 없는 카드 — 타이포 계층으로만 강조</li>
+        <li><span class="n">5</span>연한 민트 정보 스트립</li>
+        <li><span class="n">6</span>기본형 탭바, 틸 그린 활성 컬러</li>
+      </ul>
+      <iframe src="concept-3v4-soft-minimal.html"></iframe>
+    </div>
+  </div>
+</body>
+</html>

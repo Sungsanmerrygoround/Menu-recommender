@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>컨셉 4 · 다크 다이닝</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"Pretendard Variable",Pretendard,sans-serif; }
+  body { background:#0d0f14; }
+  .banner { text-align:center; font-size:12px; color:#8c93a3; padding:10px; }
+  .app { max-width:400px; margin:0 auto; min-height:96vh; background:#14161c; position:relative; padding-bottom:88px; border-radius:24px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,.5); }
+  main { padding:48px 20px 24px; }
+  .greet { font-size:14px; font-weight:700; color:#ffb84d; }
+  h1 { font-size:27px; font-weight:800; line-height:1.3; color:#f2f4f8; margin-top:6px; letter-spacing:-.5px; }
+  .label { font-size:13px; font-weight:700; color:#8c93a3; margin:22px 0 10px; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { height:38px; padding:0 15px; border-radius:999px; font-size:14px; font-weight:600; border:1px solid #2a2f3b; background:#1d2129; color:#a7aebd; }
+  .chip.on { background:#ffb84d; color:#231607; border-color:#ffb84d; font-weight:800; box-shadow:0 4px 16px rgba(255,184,77,.28); }
+  .cta { width:100%; height:56px; margin-top:30px; border:none; border-radius:16px; font-size:17px; font-weight:800; color:#231607;
+         background:linear-gradient(135deg,#ffc266,#ff9e2c); box-shadow:0 10px 26px rgba(255,160,50,.28); }
+  .card { margin-top:22px; background:#1d2129; border:1px solid #2a2f3b; border-radius:24px; padding:24px;
+          box-shadow:0 0 0 1px rgba(255,184,77,.06), 0 18px 44px rgba(0,0,0,.45); animation:pop .4s cubic-bezier(.16,1,.3,1); }
+  @keyframes pop { from { opacity:0; transform:scale(.96) translateY(10px);} to { opacity:1; transform:none;} }
+  .card-label { font-size:13px; font-weight:800; color:#ffb84d; }
+  .dish-row { display:flex; align-items:center; gap:14px; margin-top:12px; }
+  .dish-emoji { width:58px; height:58px; border-radius:20px; background:rgba(255,184,77,.12); display:flex; align-items:center; justify-content:center; font-size:31px; }
+  .dish-name { font-size:25px; font-weight:800; color:#f2f4f8; letter-spacing:-.5px; }
+  .badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+  .badge { font-size:12px; font-weight:700; padding:4px 10px; border-radius:8px; background:#262b36; color:#a7aebd; }
+  .badge.cat { background:rgba(255,184,77,.14); color:#ffb84d; }
+  .last { margin-top:16px; background:#171a21; border-radius:12px; padding:11px 14px; font-size:13.5px; font-weight:700; color:#ffb84d; }
+  .btn-p { width:100%; height:54px; margin-top:18px; border:none; border-radius:16px; font-size:16px; font-weight:800; color:#231607;
+           background:linear-gradient(135deg,#ffc266,#ff9e2c); box-shadow:0 8px 20px rgba(255,160,50,.25); }
+  .btn-s { width:100%; height:52px; margin-top:10px; border:1px solid #2a2f3b; border-radius:16px; font-size:15px; font-weight:700; background:#262b36; color:#c9cfdb; }
+  nav { position:absolute; bottom:0; left:0; right:0; background:#171a21; border-top:1px solid #232834; display:flex; padding:8px 12px 14px; }
+  nav a { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; font-weight:700; color:#6d7686; text-decoration:none; padding:6px 0; border-radius:14px; }
+  nav a.on { color:#ffb84d; background:rgba(255,184,77,.1); margin:0 6px; }
+  nav svg { width:23px; height:23px; }
+</style>
+</head>
+<body>
+<p class="banner">컨셉 4 · 다크 다이닝 — 딥 차콜 + 앰버 골드, 저녁 식탁의 조명 같은 고급스러운 무드</p>
+<div class="app">
+  <main>
+    <p class="greet">오늘 밤의 메뉴 🌙</p>
+    <h1>오늘 뭐<br>해드실래요?</h1>
+    <p class="label">종류</p>
+    <div class="chips">
+      <button class="chip on">한식</button><button class="chip">중식</button><button class="chip">양식</button><button class="chip">일식</button><button class="chip">분식/기타</button>
+    </div>
+    <p class="label">노력</p>
+    <div class="chips">
+      <button class="chip on">쉬움</button><button class="chip">중간</button><button class="chip">어려움</button>
+    </div>
+    <button class="cta">추천받기</button>
+    <div class="card">
+      <p class="card-label">오늘의 추천 🕯️</p>
+      <div class="dish-row">
+        <div class="dish-emoji">🍲</div>
+        <h2 class="dish-name">김치찌개</h2>
+      </div>
+      <div class="badges">
+        <span class="badge cat">한식</span><span class="badge">쉬움</span><span class="badge">30분</span><span class="badge">#국물</span><span class="badge">#밥</span>
+      </div>
+      <p class="last">🕐 마지막으로 먹은 지 12일 전</p>
+      <button class="btn-p">이거 먹었어요 ✓</button>
+      <button class="btn-s">다른 메뉴 볼래요</button>
+    </div>
+  </main>
+  <nav>
+    <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>홈</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v7a2 2 0 0 0 2 2h0V3"/><path d="M11 3v18"/><path d="M17 3c-1.5 1.5-2 4-2 6v3h3v9"/></svg>내 요리</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>기록</a>
+  </nav>
+</div>
+</body>
+</html>

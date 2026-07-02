@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개선안 v2 · 프레시 글래스 리파인드</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"Pretendard Variable",Pretendard,sans-serif; }
+  body { background:#dfe9f3; }
+  .banner { text-align:center; font-size:12px; color:#5a6774; padding:10px; }
+  .app { max-width:400px; margin:0 auto; min-height:96vh; background:linear-gradient(180deg,#e9f3ff 0%,#f5fbf7 100%);
+         position:relative; padding-bottom:100px; border-radius:24px; overflow:hidden; box-shadow:0 10px 40px rgba(60,110,180,.16); }
+  .blob { position:absolute; border-radius:50%; filter:blur(58px); pointer-events:none; }
+  .b1 { width:240px; height:240px; background:#7fb5ff; top:-70px; right:-70px; opacity:.55; }
+  .b2 { width:190px; height:190px; background:#7de3d0; top:330px; left:-80px; opacity:.5; }
+  .b3 { width:170px; height:170px; background:#c9a7ff; bottom:40px; right:-60px; opacity:.3; }
+  main { padding:44px 20px 24px; position:relative; }
+
+  .greet { display:inline-flex; align-items:center; gap:6px; padding:7px 13px; border-radius:999px;
+           background:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.85); backdrop-filter:blur(10px);
+           font-size:13px; font-weight:700; color:#1f6fe0; }
+  h1 { font-size:30px; font-weight:900; line-height:1.25; color:#17202b; margin-top:14px; letter-spacing:-.8px; }
+  h1 .grad { background:linear-gradient(90deg,#3182f6,#2ac1bc); -webkit-background-clip:text; background-clip:text; color:transparent; }
+
+  .panel { margin-top:22px; background:rgba(255,255,255,.55); border:1px solid rgba(255,255,255,.85);
+           backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); border-radius:24px; padding:18px;
+           box-shadow:0 10px 30px rgba(70,120,180,.1); }
+  .label { font-size:12px; font-weight:800; color:#5a6774; letter-spacing:.4px; margin-bottom:9px; }
+  .label + .chips { margin-bottom:16px; }
+  .chips:last-child { margin-bottom:0; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { height:38px; padding:0 15px; border-radius:999px; font-size:14px; font-weight:600;
+          border:1px solid rgba(255,255,255,.9); background:rgba(255,255,255,.75); color:#44515f; }
+  .chip.on { background:linear-gradient(135deg,#3182f6,#2ac1bc); color:#fff; border-color:transparent;
+             font-weight:700; box-shadow:0 5px 14px rgba(42,160,200,.38); }
+
+  .cta { width:100%; height:58px; margin-top:22px; border:none; border-radius:20px; font-size:17px; font-weight:800; color:#fff;
+         background:linear-gradient(135deg,#3182f6,#2ac1bc); box-shadow:0 12px 26px rgba(42,160,200,.38); }
+
+  .card { margin-top:22px; background:rgba(255,255,255,.72); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px);
+          border:1px solid rgba(255,255,255,.9); border-radius:28px; padding:22px;
+          box-shadow:0 20px 44px rgba(70,120,180,.18); animation:pop .4s cubic-bezier(.16,1,.3,1); }
+  @keyframes pop { from { opacity:0; transform:scale(.96) translateY(10px);} to { opacity:1; transform:none;} }
+  .card-top { display:flex; align-items:center; justify-content:space-between; }
+  .card-pill { display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:999px;
+               background:linear-gradient(135deg,rgba(49,130,246,.12),rgba(42,193,188,.12));
+               font-size:12.5px; font-weight:800; color:#1f8a86; }
+  .card-dice { font-size:18px; opacity:.55; }
+  .dish-row { display:flex; align-items:center; gap:14px; margin-top:16px; }
+  .dish-emoji { width:64px; height:64px; border-radius:22px; display:flex; align-items:center; justify-content:center; font-size:34px;
+                background:linear-gradient(#fff,#fff) padding-box, linear-gradient(135deg,#3182f6,#2ac1bc) border-box;
+                border:2px solid transparent; box-shadow:0 6px 16px rgba(42,160,200,.18); }
+  .dish-name { font-size:27px; font-weight:900; color:#17202b; letter-spacing:-.6px; }
+  .badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+  .badge { font-size:12px; font-weight:700; padding:5px 10px; border-radius:999px;
+           background:rgba(255,255,255,.8); border:1px solid rgba(255,255,255,.95); color:#44515f; }
+  .badge.cat { background:linear-gradient(135deg,rgba(49,130,246,.14),rgba(42,193,188,.14)); color:#1f6fe0; border-color:transparent; }
+  .last { display:flex; align-items:center; gap:7px; margin-top:16px; padding:12px 14px; border-radius:14px;
+          background:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.85);
+          font-size:13.5px; font-weight:700; color:#1f8a86; }
+  .btn-p { width:100%; height:54px; margin-top:18px; border:none; border-radius:16px; font-size:16px; font-weight:800; color:#fff;
+           background:linear-gradient(135deg,#3182f6,#2ac1bc); box-shadow:0 8px 20px rgba(42,160,200,.32); }
+  .btn-s { width:100%; height:52px; margin-top:10px; border:1px solid rgba(255,255,255,.95); border-radius:16px;
+           font-size:15px; font-weight:700; background:rgba(255,255,255,.6); color:#44515f; }
+
+  nav { position:absolute; bottom:14px; left:14px; right:14px; border-radius:999px;
+        background:rgba(255,255,255,.72); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+        border:1px solid rgba(255,255,255,.9); box-shadow:0 10px 28px rgba(70,120,180,.18);
+        display:flex; padding:7px; }
+  nav a { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10.5px; font-weight:700;
+          color:#7d8894; text-decoration:none; padding:7px 0; border-radius:999px; }
+  nav a.on { color:#1f6fe0; background:#fff; box-shadow:0 3px 10px rgba(70,120,180,.16); }
+  nav svg { width:22px; height:22px; }
+
+  /* 피드백용 번호 마커 */
+  .mk { position:absolute; z-index:10; width:22px; height:22px; border-radius:50%; background:#1f2430; color:#fff;
+        font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;
+        box-shadow:0 2px 6px rgba(0,0,0,.3); }
+  body.no-mk .mk { display:none; }
+  .mk-toggle { position:fixed; top:10px; right:12px; z-index:20; font-size:12px; font-weight:700; padding:6px 10px;
+               border-radius:999px; border:1px solid #c3cedb; background:#fff; color:#44515f; cursor:pointer; }
+</style>
+</head>
+<body>
+<button class="mk-toggle" onclick="document.body.classList.toggle('no-mk')">번호 표시 켜기/끄기</button>
+<p class="banner">개선안 v2 · 프레시 글래스 리파인드 — 컨셉 3의 계층/밀도를 다듬은 버전</p>
+<div class="app">
+  <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+  <main>
+    <span class="mk" style="top:40px; left:6px;">1</span>
+    <span class="greet">🥗 신선한 한 끼 어때요?</span>
+    <h1>오늘 뭐<br><span class="grad">해드실래요?</span></h1>
+
+    <span class="mk" style="top:196px; left:6px;">2</span>
+    <div class="panel">
+      <p class="label">종류</p>
+      <div class="chips">
+        <button class="chip on">✓ 한식</button><button class="chip">중식</button><button class="chip">양식</button><button class="chip">일식</button><button class="chip">분식/기타</button>
+      </div>
+      <p class="label">노력</p>
+      <div class="chips">
+        <button class="chip on">✓ 쉬움</button><button class="chip">중간</button><button class="chip">어려움</button>
+      </div>
+    </div>
+
+    <span class="mk" style="top:472px; left:6px;">3</span>
+    <button class="cta">추천받기 ✨</button>
+
+    <span class="mk" style="top:560px; left:6px;">4</span>
+    <div class="card">
+      <div class="card-top">
+        <span class="card-pill">🌿 오늘의 추천</span>
+        <span class="card-dice">🎲</span>
+      </div>
+      <div class="dish-row">
+        <div class="dish-emoji">🍲</div>
+        <h2 class="dish-name">김치찌개</h2>
+      </div>
+      <div class="badges">
+        <span class="badge cat">한식</span><span class="badge">쉬움</span><span class="badge">30분</span><span class="badge">#국물</span><span class="badge">#밥</span>
+      </div>
+      <span class="mk" style="top:788px; left:6px;">5</span>
+      <p class="last">🕐 마지막으로 먹은 지 <b>12일 전</b></p>
+      <button class="btn-p">이거 먹었어요 ✓</button>
+      <button class="btn-s">다른 메뉴 볼래요</button>
+    </div>
+  </main>
+  <span class="mk" style="bottom:52px; left:6px;">6</span>
+  <nav>
+    <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>홈</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v7a2 2 0 0 0 2 2h0V3"/><path d="M11 3v18"/><path d="M17 3c-1.5 1.5-2 4-2 6v3h3v9"/></svg>내 요리</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>기록</a>
+  </nav>
+</div>
+</body>
+</html>

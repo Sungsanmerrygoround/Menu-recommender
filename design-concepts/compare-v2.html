@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>컨셉 3: AS-IS vs 개선안 v2</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"Pretendard Variable",Pretendard,sans-serif; }
+  body { background:#eef1f5; padding:28px 24px 40px; }
+  h1 { font-size:24px; font-weight:800; color:#191f28; }
+  p.sub { font-size:14px; color:#6b7684; margin-top:6px; }
+  .wrap { display:flex; gap:24px; margin-top:24px; align-items:flex-start; flex-wrap:wrap; }
+  .col h2 { font-size:16px; font-weight:800; color:#191f28; margin-bottom:10px; }
+  iframe { width:404px; height:920px; border:1px solid #dde1e6; border-radius:20px; background:#fff; }
+  .notes { flex:1; min-width:300px; max-width:420px; background:#fff; border-radius:20px; padding:22px; }
+  .notes h2 { font-size:16px; font-weight:800; margin-bottom:14px; }
+  .notes ol { list-style:none; display:flex; flex-direction:column; gap:12px; }
+  .notes li { display:flex; gap:10px; font-size:13.5px; color:#4e5968; line-height:1.55; }
+  .notes .n { flex-shrink:0; width:22px; height:22px; border-radius:50%; background:#1f2430; color:#fff;
+              font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; margin-top:1px; }
+  .notes b { color:#191f28; }
+  .notes .tip { margin-top:16px; padding:12px 14px; background:#e8f3ff; border-radius:12px; font-size:13px; color:#1f6fe0; font-weight:600; line-height:1.5; }
+</style>
+</head>
+<body>
+  <h1>컨셉 3 — AS-IS vs 개선안 v2</h1>
+  <p class="sub">오른쪽 번호(①~⑥)를 기준으로 "3은 좋은데 5는 이렇게 바꿔줘" 식으로 피드백 주세요.</p>
+  <div class="wrap">
+    <div class="col">
+      <h2>AS-IS (컨셉 3 원안)</h2>
+      <iframe src="concept-3-fresh-glass.html"></iframe>
+    </div>
+    <div class="col">
+      <h2>개선안 v2 (리파인드)</h2>
+      <iframe src="concept-3v2-refined.html"></iframe>
+    </div>
+    <div class="notes">
+      <h2>바뀐 점 (번호 = 화면 마커)</h2>
+      <ol>
+        <li><span class="n">1</span><span><b>히어로 정리</b> — 밋밋한 그라디언트 문구 대신 유리 칩 인사말 + 타이틀 30px로 확대, 핵심 문구에만 그라디언트 포인트</span></li>
+        <li><span class="n">2</span><span><b>필터를 유리 패널로 묶음</b> — 칩이 배경에 흩어져 보이던 걸 한 덩어리로. 선택 칩에 ✓ 표시 추가로 상태 명확화</span></li>
+        <li><span class="n">3</span><span><b>CTA 강화</b> — 높이 58px, radius 20, 그림자 진하게. 화면에서 가장 눈에 띄는 요소로</span></li>
+        <li><span class="n">4</span><span><b>추천 카드 계층 개선</b> — "오늘의 추천" 필 배지 + 그라디언트 링 이모지 타일(64px) + 요리명 27px로 주인공 강조</span></li>
+        <li><span class="n">5</span><span><b>정보를 스트립으로</b> — "마지막으로 먹은 지"가 맨텍스트였던 걸 유리 스트립으로 감싸 정보 블록화</span></li>
+        <li><span class="n">6</span><span><b>플로팅 알약 탭바</b> — 화면 끝에 붙은 탭바를 떠 있는 유리 알약 형태로. 활성 탭은 흰 알약으로 또렷하게</span></li>
+      </ol>
+      <p class="tip">💡 컬러(블루→민트), 배경 블롭, 글래스 질감 등 모든 요소가 조정 가능해요. 톤을 더 차분하게/더 화려하게, 민트 빼고 블루만, 등 원하는 방향을 알려주세요.</p>
+    </div>
+  </div>
+</body>
+</html>

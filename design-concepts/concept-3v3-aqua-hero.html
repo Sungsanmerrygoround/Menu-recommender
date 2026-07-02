@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>개선안 v3 · 딥 아쿠아 히어로</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"Pretendard Variable",Pretendard,sans-serif; }
+  body { background:#dfe9f3; }
+  .banner { text-align:center; font-size:12px; color:#5a6774; padding:10px; }
+  .app { max-width:400px; margin:0 auto; min-height:96vh; background:#f7fafc; position:relative;
+         padding-bottom:88px; border-radius:24px; overflow:hidden; box-shadow:0 10px 40px rgba(60,110,180,.16); }
+
+  .hero { background:linear-gradient(160deg,#2f7ff2 0%,#27c0b2 100%); padding:44px 20px 84px; position:relative; overflow:hidden; }
+  .hero::after { content:""; position:absolute; width:260px; height:260px; border-radius:50%;
+                 background:rgba(255,255,255,.14); top:-110px; right:-90px; }
+  .hero::before { content:""; position:absolute; width:180px; height:180px; border-radius:50%;
+                  background:rgba(255,255,255,.1); bottom:-60px; left:-70px; }
+  .greet { display:inline-flex; align-items:center; gap:6px; padding:7px 13px; border-radius:999px;
+           background:rgba(255,255,255,.2); border:1px solid rgba(255,255,255,.35);
+           font-size:13px; font-weight:700; color:#fff; position:relative; }
+  h1 { font-size:30px; font-weight:900; line-height:1.28; color:#fff; margin-top:14px; letter-spacing:-.8px; position:relative; }
+  .label { font-size:12px; font-weight:800; color:rgba(255,255,255,.85); letter-spacing:.4px; margin:20px 0 9px; position:relative; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; position:relative; }
+  .chip { height:38px; padding:0 15px; border-radius:999px; font-size:14px; font-weight:600;
+          border:1px solid rgba(255,255,255,.35); background:rgba(255,255,255,.16); color:#fff; }
+  .chip.on { background:#fff; color:#1f6fe0; border-color:#fff; font-weight:800;
+             box-shadow:0 5px 14px rgba(0,40,80,.2); }
+
+  .sheet { position:relative; margin-top:-56px; background:#f7fafc; border-radius:28px 28px 0 0; padding:24px 20px 8px;
+           box-shadow:0 -10px 24px rgba(30,80,140,.08); }
+  .cta { width:100%; height:58px; border:none; border-radius:20px; font-size:17px; font-weight:800; color:#fff;
+         background:linear-gradient(135deg,#2f7ff2,#27c0b2); box-shadow:0 12px 26px rgba(42,150,200,.35); }
+
+  .card { margin-top:20px; background:#fff; border-radius:24px; padding:22px;
+          box-shadow:0 12px 32px rgba(30,80,140,.1); animation:pop .4s cubic-bezier(.16,1,.3,1); }
+  @keyframes pop { from { opacity:0; transform:scale(.96) translateY(10px);} to { opacity:1; transform:none;} }
+  .card-top { display:flex; align-items:center; justify-content:space-between; }
+  .card-pill { display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:999px;
+               background:#effaf7; font-size:12.5px; font-weight:800; color:#149286; }
+  .card-dice { font-size:18px; opacity:.5; }
+  .dish-row { display:flex; align-items:center; gap:14px; margin-top:16px; }
+  .dish-emoji { width:64px; height:64px; border-radius:22px; display:flex; align-items:center; justify-content:center;
+                font-size:34px; background:linear-gradient(135deg,#eaf3ff,#e6f8f5); }
+  .dish-name { font-size:27px; font-weight:900; color:#17202b; letter-spacing:-.6px; }
+  .badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+  .badge { font-size:12px; font-weight:700; padding:5px 10px; border-radius:999px; background:#f1f4f7; color:#4e5968; }
+  .badge.cat { background:#e8f3ff; color:#1f6fe0; }
+  .last { display:flex; align-items:center; gap:7px; margin-top:16px; padding:12px 14px; border-radius:14px;
+          background:#effaf7; font-size:13.5px; font-weight:700; color:#149286; }
+  .btn-p { width:100%; height:54px; margin-top:18px; border:none; border-radius:16px; font-size:16px; font-weight:800; color:#fff;
+           background:linear-gradient(135deg,#2f7ff2,#27c0b2); box-shadow:0 8px 20px rgba(42,150,200,.3); }
+  .btn-s { width:100%; height:52px; margin-top:10px; border:none; border-radius:16px; font-size:15px; font-weight:700;
+           background:#f1f4f7; color:#4e5968; }
+
+  nav { position:absolute; bottom:0; left:0; right:0; background:#fff; border-top:1px solid #eef2f5; display:flex; padding:8px 12px 14px; }
+  nav a { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; font-weight:700;
+          color:#8b95a1; text-decoration:none; padding:6px 0; border-radius:14px; }
+  nav a.on { color:#1f6fe0; background:#e8f3ff; margin:0 6px; }
+  nav svg { width:23px; height:23px; }
+
+  .mk { position:absolute; z-index:10; width:22px; height:22px; border-radius:50%; background:#1f2430; color:#fff;
+        font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center;
+        box-shadow:0 2px 6px rgba(0,0,0,.3); }
+  body.no-mk .mk { display:none; }
+  .mk-toggle { position:fixed; top:10px; right:12px; z-index:20; font-size:12px; font-weight:700; padding:6px 10px;
+               border-radius:999px; border:1px solid #c3cedb; background:#fff; color:#44515f; cursor:pointer; }
+</style>
+</head>
+<body>
+<button class="mk-toggle" onclick="document.body.classList.toggle('no-mk')">번호 표시 켜기/끄기</button>
+<p class="banner">개선안 v3 · 딥 아쿠아 히어로 — 상단을 컬러 블록으로, 아래는 밝은 시트로 대비</p>
+<div class="app">
+  <span class="mk" style="top:40px; left:6px;">1</span>
+  <div class="hero">
+    <span class="greet">🥗 신선한 한 끼 어때요?</span>
+    <h1>오늘 뭐<br>해드실래요?</h1>
+    <span class="mk" style="top:206px; left:6px;">2</span>
+    <p class="label">종류</p>
+    <div class="chips">
+      <button class="chip on">✓ 한식</button><button class="chip">중식</button><button class="chip">양식</button><button class="chip">일식</button><button class="chip">분식/기타</button>
+    </div>
+    <p class="label">노력</p>
+    <div class="chips">
+      <button class="chip on">✓ 쉬움</button><button class="chip">중간</button><button class="chip">어려움</button>
+    </div>
+  </div>
+  <div class="sheet">
+    <span class="mk" style="top:8px; left:6px;">3</span>
+    <button class="cta">추천받기 ✨</button>
+    <span class="mk" style="top:96px; left:6px;">4</span>
+    <div class="card">
+      <div class="card-top">
+        <span class="card-pill">🌿 오늘의 추천</span>
+        <span class="card-dice">🎲</span>
+      </div>
+      <div class="dish-row">
+        <div class="dish-emoji">🍲</div>
+        <h2 class="dish-name">김치찌개</h2>
+      </div>
+      <div class="badges">
+        <span class="badge cat">한식</span><span class="badge">쉬움</span><span class="badge">30분</span><span class="badge">#국물</span><span class="badge">#밥</span>
+      </div>
+      <span class="mk" style="top:238px; left:6px;">5</span>
+      <p class="last">🕐 마지막으로 먹은 지 <b>12일 전</b></p>
+      <button class="btn-p">이거 먹었어요 ✓</button>
+      <button class="btn-s">다른 메뉴 볼래요</button>
+    </div>
+  </div>
+  <span class="mk" style="bottom:52px; left:6px;">6</span>
+  <nav>
+    <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>홈</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v7a2 2 0 0 0 2 2h0V3"/><path d="M11 3v18"/><path d="M17 3c-1.5 1.5-2 4-2 6v3h3v9"/></svg>내 요리</a>
+    <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>기록</a>
+  </nav>
+</div>
+</body>
+</html>
