@@ -18,6 +18,14 @@ export function daysBetween(from: string, to: string): number {
   return Math.round((toDate.getTime() - fromDate.getTime()) / 86_400_000);
 }
 
+/** 해당 날짜가 속한 주의 시작일(월요일)을 YYYY-MM-DD로 반환 */
+export function startOfWeek(dateStr: string): string {
+  const date = new Date(`${dateStr}T00:00:00`);
+  const daysSinceMonday = (date.getDay() + 6) % 7;
+  date.setDate(date.getDate() - daysSinceMonday);
+  return toDateString(date);
+}
+
 /** 기록 화면용 날짜 라벨: 오늘 / 어제 / M월 D일 (요일) */
 export function dateLabel(dateStr: string, today: string = todayString()): string {
   const diff = daysBetween(dateStr, today);
