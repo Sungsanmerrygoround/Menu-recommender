@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>오늘 뭐 해먹지 · 글래스 리파인드(v2) — 디자인 검토용</title>
+<!--
+  [디자인 검토용 파일]
+  앱: "오늘 뭐 해먹지" — 집밥 메뉴 추천 웹앱 (모바일 우선, max-width 480px)
+  스택: Next.js(App Router) + Tailwind CSS 4 + Supabase / 폰트: Pretendard
+  이 파일: 채택된 시안 "글래스 리파인드(v2)"를 3개 화면(홈/내 요리/기록)에 적용한 정적 목업.
+  검토 포인트: 컬러/질감(글래스) 톤, 타이포 계층, 칩·카드·버튼 형태, 화면 간 일관성.
+-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  /* ===== 디자인 토큰 =====
+     primary gradient : #3182F6 -> #2AC1BC (135deg)
+     ink              : #17202B   / sub: #5A6774 / muted: #7D8894
+     deep blue accent : #1F6FE0   / deep teal accent: #1F8A86
+     bg gradient      : #E9F3FF -> #F5FBF7 (수직)
+     glass surface    : white 55~80% + backdrop-blur 16~20px + border white 85~95%
+     radius           : card 28 / panel 24 / button 16~20 / chip·pill 999
+  */
+  * { margin:0; padding:0; box-sizing:border-box; font-family:"Pretendard Variable",Pretendard,sans-serif; }
+  body { background:#e4ebf3; padding:26px 26px 40px; }
+
+  .brief { max-width:1290px; margin:0 auto 22px; }
+  .brief h1 { font-size:21px; font-weight:800; color:#191f28; }
+  .brief p { font-size:13px; color:#6b7684; margin-top:5px; line-height:1.6; }
+  .swatches { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  .sw { display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; color:#4e5968;
+        background:#fff; border:1px solid #e2e7ec; border-radius:999px; padding:5px 10px 5px 6px; }
+  .sw i { width:16px; height:16px; border-radius:50%; display:inline-block; }
+
+  .screens { display:flex; gap:26px; justify-content:center; align-items:flex-start; flex-wrap:wrap;
+             max-width:1290px; margin:0 auto; }
+  .screen-label { font-size:14px; font-weight:800; color:#191f28; margin-bottom:8px; }
+
+  .app { width:404px; height:960px; background:linear-gradient(180deg,#e9f3ff 0%,#f5fbf7 100%);
+         position:relative; border-radius:28px; overflow:hidden;
+         box-shadow:0 12px 44px rgba(60,110,180,.18); }
+  .blob { position:absolute; border-radius:50%; filter:blur(58px); pointer-events:none; }
+  .b1 { width:240px; height:240px; background:#7fb5ff; top:-70px; right:-70px; opacity:.55; }
+  .b2 { width:190px; height:190px; background:#7de3d0; top:330px; left:-80px; opacity:.5; }
+  .b3 { width:170px; height:170px; background:#c9a7ff; bottom:40px; right:-60px; opacity:.3; }
+  main { padding:40px 20px 120px; position:relative; height:100%; overflow:hidden; }
+
+  /* ---- 공통 요소 ---- */
+  .glass { background:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.88);
+           backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+  .greet { display:inline-flex; align-items:center; gap:6px; padding:7px 13px; border-radius:999px;
+           background:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.85);
+           font-size:13px; font-weight:700; color:#1f6fe0; }
+  h1.page { font-size:30px; font-weight:900; line-height:1.25; color:#17202b; margin-top:14px;
+            letter-spacing:-.8px; }
+  h1.page .grad { background:linear-gradient(90deg,#3182f6,#2ac1bc);
+                  -webkit-background-clip:text; background-clip:text; color:transparent; }
+  h1.small { font-size:26px; margin-top:12px; }
+
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { height:38px; padding:0 15px; border-radius:999px; font-size:14px; font-weight:600;
+          border:1px solid rgba(255,255,255,.9); background:rgba(255,255,255,.75); color:#44515f; }
+  .chip.on { background:linear-gradient(135deg,#3182f6,#2ac1bc); color:#fff; border-color:transparent;
+             font-weight:700; box-shadow:0 5px 14px rgba(42,160,200,.38); }
+
+  .badge { font-size:12px; font-weight:700; padding:5px 10px; border-radius:999px;
+           background:rgba(255,255,255,.8); border:1px solid rgba(255,255,255,.95); color:#44515f; }
+  .badge.cat { background:linear-gradient(135deg,rgba(49,130,246,.14),rgba(42,193,188,.14));
+               color:#1f6fe0; border-color:transparent; }
+  .badge.sm { font-size:11px; padding:3px 8px; }
+
+  .btn-grad { border:none; border-radius:16px; font-weight:800; color:#fff;
+              background:linear-gradient(135deg,#3182f6,#2ac1bc);
+              box-shadow:0 8px 20px rgba(42,160,200,.32); }
+  .btn-ghost { border:1px solid rgba(255,255,255,.95); border-radius:16px; font-weight:700;
+               background:rgba(255,255,255,.6); color:#44515f; }
+
+  nav { position:absolute; bottom:14px; left:14px; right:14px; border-radius:999px;
+        background:rgba(255,255,255,.72); backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+        border:1px solid rgba(255,255,255,.9); box-shadow:0 10px 28px rgba(70,120,180,.18);
+        display:flex; padding:7px; z-index:5; }
+  nav a { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; font-size:10.5px;
+          font-weight:700; color:#7d8894; text-decoration:none; padding:7px 0; border-radius:999px; }
+  nav a.on { color:#1f6fe0; background:#fff; box-shadow:0 3px 10px rgba(70,120,180,.16); }
+  nav svg { width:22px; height:22px; }
+
+  /* ---- 홈 ---- */
+  .panel { margin-top:22px; border-radius:24px; padding:18px;
+           box-shadow:0 10px 30px rgba(70,120,180,.1); }
+  .label { font-size:12px; font-weight:800; color:#5a6774; letter-spacing:.4px; margin-bottom:9px; }
+  .label + .chips { margin-bottom:16px; }
+  .chips:last-child { margin-bottom:0; }
+  .cta { width:100%; height:58px; margin-top:22px; border-radius:20px; font-size:17px;
+         box-shadow:0 12px 26px rgba(42,160,200,.38); }
+  .card { margin-top:22px; background:rgba(255,255,255,.72); border:1px solid rgba(255,255,255,.9);
+          backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); border-radius:28px;
+          padding:22px; box-shadow:0 20px 44px rgba(70,120,180,.18); }
+  .card-top { display:flex; align-items:center; justify-content:space-between; }
+  .card-pill { display:inline-flex; align-items:center; gap:5px; padding:6px 12px; border-radius:999px;
+               background:linear-gradient(135deg,rgba(49,130,246,.12),rgba(42,193,188,.12));
+               font-size:12.5px; font-weight:800; color:#1f8a86; }
+  .dish-row { display:flex; align-items:center; gap:14px; margin-top:16px; }
+  .tile { border-radius:22px; display:flex; align-items:center; justify-content:center;
+          background:linear-gradient(#fff,#fff) padding-box, linear-gradient(135deg,#3182f6,#2ac1bc) border-box;
+          border:2px solid transparent; box-shadow:0 6px 16px rgba(42,160,200,.18); }
+  .tile.lg { width:64px; height:64px; font-size:34px; }
+  .tile.md { width:48px; height:48px; font-size:24px; border-radius:16px; }
+  .dish-name { font-size:27px; font-weight:900; color:#17202b; letter-spacing:-.6px; }
+  .badges { display:flex; flex-wrap:wrap; gap:6px; margin-top:14px; }
+  .last { display:flex; align-items:center; gap:7px; margin-top:16px; padding:12px 14px;
+          border-radius:14px; background:rgba(255,255,255,.6); border:1px solid rgba(255,255,255,.85);
+          font-size:13.5px; font-weight:700; color:#1f8a86; }
+
+  /* ---- 내 요리 ---- */
+  .search { display:flex; align-items:center; gap:8px; margin-top:20px; padding:0 16px; height:50px;
+            border-radius:16px; font-size:15px; color:#7d8894; }
+  .hchips { margin-top:14px; }
+  .dish-list { display:flex; flex-direction:column; gap:12px; margin-top:18px; }
+  .dish-card { display:flex; align-items:center; gap:12px; border-radius:22px; padding:14px 16px;
+               background:rgba(255,255,255,.68); border:1px solid rgba(255,255,255,.9);
+               backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+               box-shadow:0 8px 22px rgba(70,120,180,.1); }
+  .dish-card .info { flex:1; min-width:0; }
+  .dish-card .nm { font-size:16px; font-weight:800; color:#17202b; }
+  .dish-card .meta { display:flex; gap:5px; margin-top:5px; flex-wrap:wrap; }
+  .dish-card .ago { font-size:12px; font-weight:600; color:#7d8894; margin-top:5px; }
+  .eat-btn { flex-shrink:0; padding:9px 13px; border-radius:12px; font-size:12.5px; font-weight:800;
+             color:#1f6fe0; border:none;
+             background:linear-gradient(135deg,rgba(49,130,246,.14),rgba(42,193,188,.14)); }
+  .fab { position:absolute; right:18px; bottom:92px; width:56px; height:56px; border-radius:50%;
+         border:none; font-size:26px; color:#fff; font-weight:300; z-index:5;
+         background:linear-gradient(135deg,#3182f6,#2ac1bc);
+         box-shadow:0 10px 24px rgba(42,160,200,.42); }
+
+  /* ---- 기록 ---- */
+  .stats { display:flex; gap:12px; margin-top:20px; }
+  .stat { flex:1; border-radius:22px; padding:16px;
+          box-shadow:0 8px 22px rgba(70,120,180,.1); }
+  .stat .k { font-size:12.5px; font-weight:700; color:#5a6774; }
+  .stat .v { font-size:23px; font-weight:900; color:#17202b; margin-top:4px; }
+  .stat .v small { font-size:14px; font-weight:800; }
+  .group { margin-top:20px; }
+  .group h3 { font-size:13px; font-weight:800; color:#5a6774; margin-bottom:9px; }
+  .log { display:flex; align-items:center; gap:10px; border-radius:18px; padding:13px 15px;
+         background:rgba(255,255,255,.68); border:1px solid rgba(255,255,255,.9);
+         backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); margin-bottom:8px;
+         box-shadow:0 6px 18px rgba(70,120,180,.08); }
+  .log .nm { flex:1; font-size:15px; font-weight:700; color:#17202b; }
+  .log .x { color:#b3bcc7; font-size:14px; font-weight:700; }
+</style>
+</head>
+<body>
+  <header class="brief">
+    <h1>오늘 뭐 해먹지 — 글래스 리파인드(v2) 3화면 목업 · 디자인 검토용</h1>
+    <p>모바일 480px 웹앱 (Next.js + Tailwind, 폰트 Pretendard). 검토 포인트: 글래스 질감/컬러 톤, 타이포 계층, 화면 간 일관성.</p>
+    <div class="swatches">
+      <span class="sw"><i style="background:linear-gradient(135deg,#3182f6,#2ac1bc)"></i>Primary #3182F6→#2AC1BC</span>
+      <span class="sw"><i style="background:#17202b"></i>Ink #17202B</span>
+      <span class="sw"><i style="background:#5a6774"></i>Sub #5A6774</span>
+      <span class="sw"><i style="background:#1f6fe0"></i>Blue #1F6FE0</span>
+      <span class="sw"><i style="background:#1f8a86"></i>Teal #1F8A86</span>
+      <span class="sw"><i style="background:linear-gradient(180deg,#e9f3ff,#f5fbf7)"></i>BG #E9F3FF→#F5FBF7</span>
+      <span class="sw"><i style="background:rgba(160,190,220,.5)"></i>Glass: white 55~80% + blur 16~20</span>
+    </div>
+  </header>
+
+  <div class="screens">
+
+    <!-- ============ 홈 ============ -->
+    <div>
+      <p class="screen-label">① 홈 · 추천</p>
+      <section class="app">
+        <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+        <main>
+          <span class="greet">🥗 신선한 한 끼 어때요?</span>
+          <h1 class="page">오늘 뭐<br><span class="grad">해드실래요?</span></h1>
+          <div class="panel glass">
+            <p class="label">종류</p>
+            <div class="chips">
+              <button class="chip on">✓ 한식</button><button class="chip">중식</button>
+              <button class="chip">양식</button><button class="chip">일식</button>
+              <button class="chip">분식/기타</button>
+            </div>
+            <p class="label">노력</p>
+            <div class="chips">
+              <button class="chip on">✓ 쉬움</button><button class="chip">중간</button>
+              <button class="chip">어려움</button>
+            </div>
+          </div>
+          <button class="cta btn-grad">추천받기 ✨</button>
+          <div class="card">
+            <div class="card-top">
+              <span class="card-pill">🌿 오늘의 추천</span>
+              <span style="font-size:18px; opacity:.55;">🎲</span>
+            </div>
+            <div class="dish-row">
+              <div class="tile lg">🍲</div>
+              <h2 class="dish-name">김치찌개</h2>
+            </div>
+            <div class="badges">
+              <span class="badge cat">한식</span><span class="badge">쉬움</span>
+              <span class="badge">30분</span><span class="badge">#국물</span><span class="badge">#밥</span>
+            </div>
+            <p class="last">🕐 마지막으로 먹은 지 <b>12일 전</b></p>
+            <button class="btn-grad" style="width:100%; height:54px; margin-top:18px; font-size:16px;">이거 먹었어요 ✓</button>
+            <button class="btn-ghost" style="width:100%; height:52px; margin-top:10px; font-size:15px;">다른 메뉴 볼래요</button>
+          </div>
+        </main>
+        <nav>
+          <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>홈</a>
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v7a2 2 0 0 0 2 2h0V3"/><path d="M11 3v18"/><path d="M17 3c-1.5 1.5-2 4-2 6v3h3v9"/></svg>내 요리</a>
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>기록</a>
+        </nav>
+      </section>
+    </div>
+
+    <!-- ============ 내 요리 ============ -->
+    <div>
+      <p class="screen-label">② 내 요리 · 관리</p>
+      <section class="app">
+        <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+        <main>
+          <span class="greet">🍳 21개의 요리</span>
+          <h1 class="page small">내 요리</h1>
+          <div class="search glass">🔍 <span>요리 이름 검색</span></div>
+          <div class="chips hchips">
+            <button class="chip on">전체</button><button class="chip">한식</button>
+            <button class="chip">중식</button><button class="chip">양식</button>
+            <button class="chip">일식</button>
+          </div>
+          <div class="dish-list">
+            <div class="dish-card">
+              <div class="tile md">🍲</div>
+              <div class="info">
+                <p class="nm">김치찌개</p>
+                <div class="meta">
+                  <span class="badge cat sm">한식</span><span class="badge sm">쉬움</span>
+                  <span class="badge sm">30분</span>
+                </div>
+                <p class="ago">12일 전에 먹었어요</p>
+              </div>
+              <button class="eat-btn">먹었어요</button>
+            </div>
+            <div class="dish-card">
+              <div class="tile md">🍝</div>
+              <div class="info">
+                <p class="nm">알리오올리오</p>
+                <div class="meta">
+                  <span class="badge cat sm">양식</span><span class="badge sm">중간</span>
+                  <span class="badge sm">25분</span>
+                </div>
+                <p class="ago">어제 먹었어요</p>
+              </div>
+              <button class="eat-btn">먹었어요</button>
+            </div>
+            <div class="dish-card">
+              <div class="tile md">🍛</div>
+              <div class="info">
+                <p class="nm">카레라이스</p>
+                <div class="meta">
+                  <span class="badge cat sm">일식</span><span class="badge sm">쉬움</span>
+                  <span class="badge sm">40분</span>
+                </div>
+                <p class="ago">아직 안 먹었어요</p>
+              </div>
+              <button class="eat-btn">먹었어요</button>
+            </div>
+            <div class="dish-card">
+              <div class="tile md">🥘</div>
+              <div class="info">
+                <p class="nm">마파두부</p>
+                <div class="meta">
+                  <span class="badge cat sm">중식</span><span class="badge sm">중간</span>
+                  <span class="badge sm">30분</span>
+                </div>
+                <p class="ago">5일 전에 먹었어요</p>
+              </div>
+              <button class="eat-btn">먹었어요</button>
+            </div>
+          </div>
+          <button class="fab">+</button>
+        </main>
+        <nav>
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>홈</a>
+          <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v7a2 2 0 0 0 2 2h0V3"/><path d="M11 3v18"/><path d="M17 3c-1.5 1.5-2 4-2 6v3h3v9"/></svg>내 요리</a>
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>기록</a>
+        </nav>
+      </section>
+    </div>
+
+    <!-- ============ 기록 ============ -->
+    <div>
+      <p class="screen-label">③ 기록 · 타임라인</p>
+      <section class="app">
+        <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
+        <main>
+          <span class="greet">📅 이번 주도 잘 챙겨 먹는 중</span>
+          <h1 class="page small">기록</h1>
+          <div class="stats">
+            <div class="stat glass">
+              <p class="k">이번 주 먹은 요리</p>
+              <p class="v">5<small>끼</small></p>
+            </div>
+            <div class="stat glass">
+              <p class="k">자주 먹는 종류</p>
+              <p class="v">한식</p>
+            </div>
+          </div>
+          <div class="group">
+            <h3>오늘</h3>
+            <div class="log">
+              <span style="font-size:20px;">🍲</span>
+              <p class="nm">김치찌개</p>
+              <span class="badge cat sm">한식</span><span class="x">✕</span>
+            </div>
+          </div>
+          <div class="group">
+            <h3>어제</h3>
+            <div class="log">
+              <span style="font-size:20px;">🍝</span>
+              <p class="nm">알리오올리오</p>
+              <span class="badge cat sm">양식</span><span class="x">✕</span>
+            </div>
+            <div class="log">
+              <span style="font-size:20px;">🍜</span>
+              <p class="nm">라면</p>
+              <span class="badge cat sm">분식/기타</span><span class="x">✕</span>
+            </div>
+          </div>
+          <div class="group">
+            <h3>6월 30일 (화)</h3>
+            <div class="log">
+              <span style="font-size:20px;">🥩</span>
+              <p class="nm">제육볶음</p>
+              <span class="badge cat sm">한식</span><span class="x">✕</span>
+            </div>
+            <div class="log">
+              <span style="font-size:20px;">🍚</span>
+              <p class="nm">비빔밥</p>
+              <span class="badge cat sm">한식</span><span class="x">✕</span>
+            </div>
+          </div>
+        </main>
+        <nav>
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>홈</a>
+          <a href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v7a2 2 0 0 0 2 2h0V3"/><path d="M11 3v18"/><path d="M17 3c-1.5 1.5-2 4-2 6v3h3v9"/></svg>내 요리</a>
+          <a class="on" href="#"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>기록</a>
+        </nav>
+      </section>
+    </div>
+
+  </div>
+</body>
+</html>
