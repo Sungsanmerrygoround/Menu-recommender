@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import BottomNav from "@/components/BottomNav";
+import { ToastProvider } from "@/components/Toast";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -26,9 +28,12 @@ export default function RootLayout({
         />
       </head>
       <body className="bg-background text-text-main">
-        <div className="mx-auto min-h-dvh w-full max-w-[480px] bg-background">
-          {children}
-        </div>
+        <ToastProvider>
+          <div className="mx-auto min-h-dvh w-full max-w-[480px] bg-background pb-24">
+            {children}
+          </div>
+          <BottomNav />
+        </ToastProvider>
       </body>
     </html>
   );

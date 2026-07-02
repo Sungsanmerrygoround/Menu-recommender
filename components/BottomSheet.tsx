@@ -1,0 +1,49 @@
+"use client";
+
+import { useEffect } from "react";
+
+interface BottomSheetProps {
+  open: boolean;
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
+}
+
+export default function BottomSheet({
+  open,
+  onClose,
+  title,
+  children,
+}: BottomSheetProps) {
+  // 시트가 열려 있는 동안 배경 스크롤 잠금
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-40">
+      <div
+        className="animate-fade-in absolute inset-0 bg-black/40"
+        onClick={onClose}
+      />
+      <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[480px]">
+        <div className="animate-sheet-up max-h-[85dvh] overflow-y-auto rounded-t-[24px] bg-white px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-3">
+          <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-[#e5e8eb]" />
+          {title && (
+            <h2 className="mb-5 text-[19px] font-bold text-text-main">
+              {title}
+            </h2>
+          )}
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}

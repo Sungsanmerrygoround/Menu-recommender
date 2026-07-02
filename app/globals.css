@@ -73,6 +73,14 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* 필터 칩 가로 스크롤 영역에서 스크롤바 숨김 */
+@utility scrollbar-none {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* 버튼 press 시 살짝 축소되는 토스풍 효과 */
 .press-effect {
   transition: transform 0.1s ease, opacity 0.1s ease;
