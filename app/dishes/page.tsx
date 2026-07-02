@@ -6,6 +6,7 @@ import BottomSheet from "@/components/BottomSheet";
 import Chip from "@/components/Chip";
 import DishForm from "@/components/DishForm";
 import EmptyState from "@/components/EmptyState";
+import SkeletonList from "@/components/Skeleton";
 import { useToast } from "@/components/Toast";
 import { daysBetween, todayString } from "@/lib/date-utils";
 import {
@@ -127,9 +128,7 @@ export default function DishesPage() {
       {/* 리스트 */}
       <div className="mt-4 flex flex-col gap-3">
         {dishes === null ? (
-          <p className="py-16 text-center text-[14px] text-text-sub">
-            불러오는 중...
-          </p>
+          <SkeletonList />
         ) : error ? (
           <EmptyState
             emoji="😵"

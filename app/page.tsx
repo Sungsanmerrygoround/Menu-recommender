@@ -196,19 +196,19 @@ export default function HomePage() {
         />
       )}
       {!error && dishes !== null && dishes.length === 0 && (
-        <div className="mt-4">
-          <EmptyState
-            emoji="🍳"
-            title="아직 등록된 요리가 없어요"
-            description="내 요리 탭에서 만들 수 있는 요리를 먼저 추가해주세요"
-          />
-          <Link
-            href="/dishes"
-            className="press-effect mx-auto -mt-8 block w-fit rounded-[14px] bg-[#e8f3ff] px-5 py-3 text-[15px] font-semibold text-primary"
-          >
-            요리 추가하러 가기
-          </Link>
-        </div>
+        <EmptyState
+          emoji="🍳"
+          title="아직 등록된 요리가 없어요"
+          description="내 요리 탭에서 만들 수 있는 요리를 먼저 추가해주세요"
+          action={
+            <Link
+              href="/dishes"
+              className="press-effect block rounded-[14px] bg-[#e8f3ff] px-5 py-3 text-[15px] font-semibold text-primary"
+            >
+              요리 추가하러 가기
+            </Link>
+          }
+        />
       )}
       {noCandidates && dishes !== null && dishes.length > 0 && (
         <EmptyState

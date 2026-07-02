@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Badge from "@/components/Badge";
 import EmptyState from "@/components/EmptyState";
+import SkeletonList from "@/components/Skeleton";
 import { useToast } from "@/components/Toast";
 import { dateLabel, startOfWeek, todayString } from "@/lib/date-utils";
 import { deleteMealLog, fetchMealLogs } from "@/lib/queries";
@@ -105,9 +106,9 @@ export default function HistoryPage() {
 
       {/* 타임라인 */}
       {logs === null ? (
-        <p className="py-16 text-center text-[14px] text-text-sub">
-          불러오는 중...
-        </p>
+        <div className="mt-6">
+          <SkeletonList />
+        </div>
       ) : error ? (
         <EmptyState
           emoji="😵"

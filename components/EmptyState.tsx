@@ -6,6 +6,8 @@ interface EmptyStateProps {
   description?: string;
   actionLabel?: string;
   onAction?: () => void;
+  /** 버튼 대신 커스텀 액션(예: Link)을 넣을 때 사용 */
+  action?: React.ReactNode;
 }
 
 export default function EmptyState({
@@ -14,6 +16,7 @@ export default function EmptyState({
   description,
   actionLabel,
   onAction,
+  action,
 }: EmptyStateProps) {
   return (
     <div className="flex flex-col items-center px-5 py-16 text-center">
@@ -33,6 +36,7 @@ export default function EmptyState({
           {actionLabel}
         </button>
       )}
+      {action && <div className="mt-6">{action}</div>}
     </div>
   );
 }
