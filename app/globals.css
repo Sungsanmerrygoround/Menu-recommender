@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #f9fafb;
+  --color-card: #ffffff;
+  --color-primary: #3182f6;
+  --color-primary-dark: #1b64da;
+  --color-text-main: #191f28;
+  --color-text-sub: #8b95a1;
+  --color-divider: #f2f4f6;
+
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system,
+    BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI",
+    "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+
+  --radius-card: 18px;
+  --radius-button: 14px;
+
+  --animate-card-in: card-in 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-sheet-up: sheet-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  --animate-fade-in: fade-in 0.2s ease-out;
+  --animate-toast-up: toast-up 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  @keyframes card-in {
+    from {
+      opacity: 0;
+      transform: scale(0.96) translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
+
+  @keyframes sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes toast-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+html {
+  background-color: var(--color-background);
+}
+
+body {
+  font-family: var(--font-sans);
+  color: var(--color-text-main);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 버튼 press 시 살짝 축소되는 토스풍 효과 */
+.press-effect {
+  transition: transform 0.1s ease, opacity 0.1s ease;
+}
+.press-effect:active {
+  transform: scale(0.97);
+}
