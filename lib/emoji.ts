@@ -8,3 +8,16 @@ export const CATEGORY_EMOJI: Record<Category, string> = {
   일식: "🍛",
   "분식/기타": "🍜",
 };
+
+/**
+ * 종류별 차트 색 (엔티티 고정 매핑 — 순서/개수가 바뀌어도 색은 유지).
+ * dataviz 검증기 통과 팔레트: 라이트 서피스에서 CVD ΔE 48+, 명도 밴드 내.
+ * 중식(#E28A2B)은 서피스 대비 3:1 미만 WARN → 범례에 수치 라벨 필수.
+ */
+export const CATEGORY_COLOR: Record<Category, string> = {
+  한식: "#2f7ff2",
+  중식: "#e28a2b",
+  양식: "#e25c7e",
+  일식: "#8b5cf6",
+  "분식/기타": "#1fa39d",
+};
