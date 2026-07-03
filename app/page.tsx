@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Badge from "@/components/Badge";
 import Chip from "@/components/Chip";
 import EmptyState from "@/components/EmptyState";
@@ -53,7 +53,17 @@ export default function HomePage() {
   const [pickCount, setPickCount] = useState(0); // 카드 재등장 애니메이션 트리거
   const [eaten, setEaten] = useState(false);
   const [noCandidates, setNoCandidates] = useState(false);
+  const [rolling, setRolling] = useState(false); // 룰렛 연출 중
+  const [rollingDish, setRollingDish] = useState<DishWithLastEaten | null>(null);
+  const rollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const showToast = useToast();
+
+  // 페이지 이탈 시 룰렛 타이머 정리
+  useEffect(() => {
+    return () => {
+      if (rollTimer.current) clearInterval(rollTimer.current);
+    };
+  }, []);
 
   const reload = useCallback(async () => {
     try {
@@ -85,7 +95,15 @@ export default function HomePage() {
       : [...list, value];
   }
 
+  function reveal(result: DishWithLastEaten) {
+    setRolling(false);
+    setEaten(false);
+    setPicked(result);
+    setPickCount((c) => c + 1);
+  }
+
   function recommend(excludeIds: string[] = []) {
+    if (rolling) return;
     const result = pickRecommendation(candidates, DEFAULT_RECOMMENDATION_CONFIG, {
       excludeIds,
     });
@@ -99,9 +117,33 @@ export default function HomePage() {
       return;
     }
     setNoCandidates(false);
+
+    // 룰렛 연출: 후보 이름이 슬롯처럼 지나가다 당첨 메뉴에서 멈춘다.
+    // 후보가 1개뿐이거나 사용자가 모션 축소를 원하면 바로 공개.
+    const pool = candidates.filter((d) => !excludeIds.includes(d.id));
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    if (pool.length < 2 || reduceMotion) {
+      reveal(result);
+      return;
+    }
+
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
     setEaten(false);
-    setPicked(result);
-    setPickCount((c) => c + 1);
+    setRolling(true);
+    setRollingDish(shuffled[0]);
+    const startedAt = Date.now();
+    let i = 1;
+    rollTimer.current = setInterval(() => {
+      if (Date.now() - startedAt > 1100) {
+        if (rollTimer.current) clearInterval(rollTimer.current);
+        reveal(result);
+        return;
+      }
+      setRollingDish(shuffled[i % shuffled.length]);
+      i++;
+    }, 75);
   }
 
   async function handleEat() {
@@ -157,11 +199,12 @@ export default function HomePage() {
       </section>
 
       {/* CTA: 추천 전 primary / 추천 후 ghost로 강등 */}
-      {picked ? (
+      {picked || rolling ? (
         <button
           type="button"
           onClick={() => recommend()}
-          className="glass-surface press-effect mt-3.5 h-[54px] w-full rounded-[20px] text-[16px] font-bold text-[#44515f]"
+          disabled={rolling}
+          className="glass-surface press-effect mt-3.5 h-[54px] w-full rounded-[20px] text-[16px] font-bold text-[#44515f] disabled:opacity-60"
         >
           다시 추천받기
         </button>
@@ -176,8 +219,25 @@ export default function HomePage() {
         </button>
       )}
 
+      {/* 룰렛 연출 카드 */}
+      {rolling && rollingDish && (
+        <div className="glass-card shadow-hero-lv mt-7 rounded-[28px] p-5">
+          <span className="grad-tint inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-extrabold text-teal-acc">
+            🎲 뽑는 중...
+          </span>
+          <div className="mt-4 flex items-center gap-3.5">
+            <div className="tile-ring flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] text-[34px]">
+              {CATEGORY_EMOJI[rollingDish.category]}
+            </div>
+            <h2 className="truncate text-[32px] font-black tracking-[-0.02em] text-ink opacity-60">
+              {rollingDish.name}
+            </h2>
+          </div>
+        </div>
+      )}
+
       {/* 추천 결과 카드 */}
-      {picked && (
+      {picked && !rolling && (
         <div
           key={`${picked.id}-${pickCount}`}
           className="glass-card shadow-hero-lv animate-card-in mt-7 rounded-[28px] p-5"
