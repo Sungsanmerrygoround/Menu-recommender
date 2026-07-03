@@ -305,7 +305,7 @@ export default function HistoryPage() {
                       type="button"
                       onClick={() => setPendingDelete(log)}
                       aria-label="기록 삭제"
-                      className="press-effect -m-3 p-3 text-[14px] font-bold text-[#b3bcc7]"
+                      className="press-effect -m-3 p-3 text-[14px] font-bold text-dim"
                     >
                       ✕
                     </button>

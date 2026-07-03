@@ -60,7 +60,7 @@ export default function DishForm({
   }
 
   const inputClass =
-    "w-full rounded-[14px] bg-[#f1f4f8] px-4 py-3.5 text-[16px] text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-grad-start/40";
+    "w-full rounded-[14px] bg-field px-4 py-3.5 text-[16px] text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-grad-start/40";
 
   return (
     <div className="flex flex-col gap-5">
@@ -108,7 +108,7 @@ export default function DishForm({
               className={`press-effect flex h-10 w-10 items-center justify-center rounded-[12px] text-[20px] ${
                 emoji === e
                   ? "grad-tint ring-2 ring-grad-start/60"
-                  : "bg-[#f1f4f8]"
+                  : "bg-field"
               }`}
             >
               {e}

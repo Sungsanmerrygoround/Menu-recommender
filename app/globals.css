@@ -18,6 +18,11 @@
   --color-blue-btn: #1f6fe0;
   --color-teal-acc: #1f8a86;
   --color-chip-ink: #44515f;
+  --color-field: #f1f4f8;
+  --color-row: #f6f8fb;
+  --color-divider: #eef2f6;
+  --color-line: #d5dce4;
+  --color-dim: #b3bcc7;
   --color-grad-start: #3182f6;
   --color-grad-end: #1fa39d;
 
@@ -201,4 +206,107 @@ body {
 }
 .press-effect:active {
   transform: scale(0.97);
+}
+
+/* ---- 라이트/다크 대응 서피스 ---- */
+.app-bg {
+  background: linear-gradient(180deg, #e9f3ff 0%, #f5fbf7 100%);
+}
+.chip-off {
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--color-chip-ink);
+}
+.badge-gray {
+  border: 1px solid rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--color-chip-ink);
+}
+.sheet-surface {
+  background: rgba(255, 255, 255, 0.95);
+}
+.nav-on {
+  background: #ffffff;
+  box-shadow: 0 3px 10px rgba(70, 120, 180, 0.16);
+}
+
+/* ---- 다크 모드 ---- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-ink: #edf2f8;
+    --color-sub: #a3aebb;
+    --color-muted: #7c8898;
+    --color-chip-ink: #c6cfd9;
+    --color-blue-acc: #8ab6ff;
+    --color-blue-btn: #6ea3ff;
+    --color-teal-acc: #4ccfc4;
+    --color-field: #232d3a;
+    --color-row: #202a36;
+    --color-divider: #2a3542;
+    --color-line: #3a4656;
+    --color-dim: #5b6878;
+    --color-text-main: #edf2f8;
+    --color-text-sub: #a3aebb;
+  }
+  html {
+    background-color: #0b0f15;
+  }
+  .app-bg {
+    background: linear-gradient(180deg, #101826 0%, #0f1a19 100%);
+  }
+  .blob-1 {
+    background: #2c5aa8;
+    opacity: 0.4;
+  }
+  .blob-2 {
+    background: #1e6f66;
+    opacity: 0.35;
+  }
+  .blob-3 {
+    background: #3a4f88;
+    opacity: 0.25;
+  }
+  .glass-surface {
+    background: rgba(30, 40, 54, 0.55);
+    border-color: rgba(255, 255, 255, 0.09);
+  }
+  .glass-card {
+    background: rgba(34, 45, 60, 0.72);
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+  .chip-off {
+    background: rgba(44, 56, 72, 0.7);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .badge-gray {
+    background: rgba(46, 58, 74, 0.8);
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .sheet-surface {
+    background: rgba(24, 32, 43, 0.97);
+  }
+  .nav-on {
+    background: #2c3a4c;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.35);
+  }
+  .tile-ring {
+    background: linear-gradient(#1d2836, #1d2836) padding-box,
+      linear-gradient(135deg, #3182f6, #1fa39d) border-box;
+  }
+  .grad-tint {
+    background-image: linear-gradient(
+      135deg,
+      rgba(49, 130, 246, 0.22),
+      rgba(31, 163, 157, 0.22)
+    );
+  }
+  .shadow-hero-lv {
+    box-shadow: 0 20px 44px rgba(0, 0, 0, 0.4);
+  }
+  .shadow-panel-lv {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  }
+  .shadow-list-lv {
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  }
 }

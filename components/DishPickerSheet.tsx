@@ -40,7 +40,7 @@ export default function DishPickerSheet({
   return (
     <BottomSheet open={open} onClose={handleClose} title={title}>
       <input
-        className="w-full rounded-[14px] bg-[#f1f4f8] px-4 py-3.5 text-[16px] text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-grad-start/40"
+        className="w-full rounded-[14px] bg-field px-4 py-3.5 text-[16px] text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-grad-start/40"
         value={search}
         onChange={(e) => setSearch(e.target.value)}
         placeholder="요리 이름 검색"
@@ -65,7 +65,7 @@ export default function DishPickerSheet({
                 setSearch("");
                 onSelect(dish);
               }}
-              className="press-effect flex items-center gap-3 rounded-2xl bg-[#f6f8fb] px-4 py-3 text-left"
+              className="press-effect flex items-center gap-3 rounded-2xl bg-row px-4 py-3 text-left"
             >
               <span className="text-[20px]">
                 {CATEGORY_EMOJI[dish.category]}

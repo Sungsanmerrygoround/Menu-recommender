@@ -16,7 +16,7 @@ export default function Chip({ label, selected, onClick, check = false }: ChipPr
       className={`press-effect hit-44 h-[38px] shrink-0 rounded-full px-[15px] text-[14px] transition-colors ${
         selected
           ? "grad-primary shadow-chip-on font-bold text-white"
-          : "border border-white/90 bg-white/75 font-semibold text-[#44515f]"
+          : "chip-off font-semibold"
       }`}
     >
       {selected && check ? `✓ ${label}` : label}

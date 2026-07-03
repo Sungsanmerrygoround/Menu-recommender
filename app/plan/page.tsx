@@ -288,7 +288,7 @@ export default function PlanPage() {
                       <div
                         key={slot}
                         className={`flex min-h-[52px] items-center gap-2.5 py-2 ${
-                          idx > 0 ? "border-t border-[#eef2f6]" : ""
+                          idx > 0 ? "border-t border-divider" : ""
                         }`}
                       >
                         <span className="w-[30px] shrink-0 text-[11px] font-extrabold text-muted">
@@ -320,7 +320,7 @@ export default function PlanPage() {
                               type="button"
                               onClick={() => removeSlot(date, slot)}
                               aria-label="비우기"
-                              className="press-effect -m-1.5 p-1.5 text-[12px] font-bold text-[#b3bcc7]"
+                              className="press-effect -m-1.5 p-1.5 text-[12px] font-bold text-dim"
                             >
                               ✕
                             </button>
@@ -340,7 +340,7 @@ export default function PlanPage() {
                             <button
                               type="button"
                               onClick={() => setPicking({ date, slot })}
-                              className="press-effect hit-44 shrink-0 rounded-full border border-[#d5dce4] bg-white/70 px-2.5 py-1.5 text-[11px] font-extrabold text-chip-ink"
+                              className="press-effect hit-44 shrink-0 rounded-full border border-line bg-row px-2.5 py-1.5 text-[11px] font-extrabold text-chip-ink"
                             >
                               선택
                             </button>
@@ -396,11 +396,11 @@ export default function PlanPage() {
                     key={item.name}
                     type="button"
                     onClick={() => toggleChecked(item.name)}
-                    className="press-effect flex items-center gap-3 rounded-2xl bg-[#f6f8fb] px-4 py-3 text-left"
+                    className="press-effect flex items-center gap-3 rounded-2xl bg-row px-4 py-3 text-left"
                   >
                     <span
                       className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] text-[13px] font-black text-white ${
-                        done ? "grad-primary" : "border border-[#d5dce4] bg-white"
+                        done ? "grad-primary" : "border border-line bg-field"
                       }`}
                     >
                       {done ? "✓" : ""}

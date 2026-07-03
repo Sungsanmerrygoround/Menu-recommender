@@ -37,8 +37,8 @@ export default function BottomSheet({
         onClick={onClose}
       />
       <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[480px]">
-        <div className="animate-sheet-up max-h-[85dvh] overflow-y-auto rounded-t-[28px] bg-white/95 px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
-          <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-[#dde4ec]" />
+        <div className="sheet-surface animate-sheet-up max-h-[85dvh] overflow-y-auto rounded-t-[28px] px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
+          <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-line" />
           {title && (
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-[18px] font-extrabold text-ink">{title}</h2>

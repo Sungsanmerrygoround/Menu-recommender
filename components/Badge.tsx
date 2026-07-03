@@ -9,10 +9,7 @@ export default function Badge({
   tone = "gray",
   size = "md",
 }: BadgeProps) {
-  const toneClass =
-    tone === "blue"
-      ? "grad-tint text-blue-acc"
-      : "bg-white/80 border border-white/95 text-[#44515f]";
+  const toneClass = tone === "blue" ? "grad-tint text-blue-acc" : "badge-gray";
   const sizeClass =
     size === "sm" ? "px-2 py-[3px] text-[11px]" : "px-2.5 py-[5px] text-[12px]";
   return (

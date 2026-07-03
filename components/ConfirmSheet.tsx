@@ -37,7 +37,7 @@ export default function ConfirmSheet({
       <button
         type="button"
         onClick={onClose}
-        className="press-effect mt-2.5 h-[52px] w-full rounded-2xl bg-[#f1f4f8] text-[14px] font-bold text-[#44515f]"
+        className="press-effect mt-2.5 h-[52px] w-full rounded-2xl bg-field text-[14px] font-bold text-chip-ink"
       >
         취소
       </button>

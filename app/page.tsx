@@ -235,7 +235,7 @@ export default function HomePage() {
             return (
               <div
                 key={slot}
-                className="flex min-h-[48px] items-center gap-2.5 border-t border-[#eef2f6] py-1.5"
+                className="flex min-h-[48px] items-center gap-2.5 border-t border-divider py-1.5"
               >
                 <span className="w-[30px] shrink-0 text-[11px] font-extrabold text-muted">
                   {slot}

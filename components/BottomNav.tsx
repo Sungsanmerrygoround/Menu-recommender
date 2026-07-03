@@ -62,9 +62,7 @@ export default function BottomNav() {
               key={href}
               href={href}
               className={`press-effect flex flex-1 flex-col items-center gap-0.5 rounded-full py-[7px] text-[11.5px] font-bold ${
-                active
-                  ? "bg-white text-blue-btn shadow-[0_3px_10px_rgba(70,120,180,.16)]"
-                  : "text-sub"
+                active ? "nav-on text-blue-btn" : "text-sub"
               }`}
             >
               <Icon className="h-[22px] w-[22px]" />
