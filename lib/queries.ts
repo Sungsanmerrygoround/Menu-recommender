@@ -7,6 +7,7 @@ import type {
   Effort,
   MealLogWithDish,
   MealPlanWithDish,
+  MealSlot,
 } from "./types";
 
 export interface DishInput {
@@ -103,7 +104,7 @@ export async function fetchMealPlans(
 ): Promise<MealPlanWithDish[]> {
   const { data, error } = await supabase
     .from("meal_plans")
-    .select("id, plan_date, dish_id, created_at, dish:dishes(*)")
+    .select("id, plan_date, meal_slot, dish_id, created_at, dish:dishes(*)")
     .gte("plan_date", from)
     .lte("plan_date", to)
     .order("plan_date");
@@ -111,14 +112,18 @@ export async function fetchMealPlans(
   return (data ?? []) as unknown as MealPlanWithDish[];
 }
 
-/** 특정 날짜의 식단 저장 (이미 있으면 교체) */
+/** 특정 날짜·끼니의 식단 저장 (이미 있으면 교체) */
 export async function upsertMealPlan(
   planDate: string,
+  mealSlot: MealSlot,
   dishId: string
 ): Promise<void> {
   const { error } = await supabase
     .from("meal_plans")
-    .upsert({ plan_date: planDate, dish_id: dishId }, { onConflict: "plan_date" });
+    .upsert(
+      { plan_date: planDate, meal_slot: mealSlot, dish_id: dishId },
+      { onConflict: "plan_date,meal_slot" }
+    );
   if (error) throw error;
 }
 

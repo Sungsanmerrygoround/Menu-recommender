@@ -1,8 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import Badge from "@/components/Badge";
 import BottomSheet from "@/components/BottomSheet";
+import DishPickerSheet from "@/components/DishPickerSheet";
 import EmptyState from "@/components/EmptyState";
 import SkeletonList from "@/components/Skeleton";
 import { useToast } from "@/components/Toast";
@@ -17,9 +17,18 @@ import {
 } from "@/lib/queries";
 import { DEFAULT_RECOMMENDATION_CONFIG } from "@/lib/recommendation-config";
 import { pickRecommendation } from "@/lib/recommendation";
-import type { DishWithLastEaten, MealPlanWithDish } from "@/lib/types";
+import {
+  MEAL_SLOTS,
+  type DishWithLastEaten,
+  type MealPlanWithDish,
+  type MealSlot,
+} from "@/lib/types";
 
 const PLAN_DAYS = 7;
+
+function slotKey(date: string, slot: MealSlot): string {
+  return `${date}|${slot}`;
+}
 
 export default function PlanPage() {
   const [plans, setPlans] = useState<MealPlanWithDish[] | null>(null);
@@ -28,6 +37,9 @@ export default function PlanPage() {
   const [working, setWorking] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [picking, setPicking] = useState<{ date: string; slot: MealSlot } | null>(
+    null
+  );
   const showToast = useToast();
 
   const today = todayString();
@@ -56,11 +68,106 @@ export default function PlanPage() {
     reload();
   }, [reload]);
 
-  const planByDate = useMemo(() => {
+  const planBySlot = useMemo(() => {
     const map = new Map<string, MealPlanWithDish>();
-    for (const p of plans ?? []) map.set(p.plan_date, p);
+    for (const p of plans ?? []) map.set(slotKey(p.plan_date, p.meal_slot), p);
     return map;
   }, [plans]);
+
+  /** 같은 날에 이미 배정된 요리 id 목록 (하루 중복 방지) */
+  function sameDayDishIds(date: string, exceptSlot?: MealSlot): string[] {
+    return (plans ?? [])
+      .filter((p) => p.plan_date === date && p.meal_slot !== exceptSlot)
+      .map((p) => p.dish_id);
+  }
+
+  /** 저녁 빈 칸만 자동 추첨으로 채우기 (주간 저녁 중복 방지) */
+  async function fillEmptyDinners() {
+    if (!dishes || dishes.length === 0 || working) return;
+    const emptyDates = dates.filter((d) => !planBySlot.has(slotKey(d, "저녁")));
+    if (emptyDates.length === 0) {
+      showToast("저녁은 이미 모두 채워져 있어요");
+      return;
+    }
+    setWorking(true);
+    try {
+      const exclude = (plans ?? [])
+        .filter((p) => p.meal_slot === "저녁")
+        .map((p) => p.dish_id);
+      let filled = 0;
+      for (const date of emptyDates) {
+        const pick = pickRecommendation(dishes, DEFAULT_RECOMMENDATION_CONFIG, {
+          excludeIds: [...exclude, ...sameDayDishIds(date)],
+        });
+        if (!pick) break; // 후보 소진
+        await upsertMealPlan(date, "저녁", pick.id);
+        exclude.push(pick.id);
+        filled++;
+      }
+      showToast(`저녁 ${filled}일을 채웠어요`);
+      await reload();
+    } catch {
+      showToast("저장에 실패했어요. 잠시 후 다시 시도해주세요");
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  /** 한 칸 랜덤 뽑기/재추첨 (같은 날 다른 끼니 + 현재 요리 제외) */
+  async function rollSlot(date: string, slot: MealSlot) {
+    if (!dishes || working) return;
+    const current = planBySlot.get(slotKey(date, slot));
+    const exclude = sameDayDishIds(date, slot);
+    if (current) exclude.push(current.dish_id);
+    const pick = pickRecommendation(dishes, DEFAULT_RECOMMENDATION_CONFIG, {
+      excludeIds: exclude,
+    });
+    if (!pick) {
+      showToast("바꿀 수 있는 다른 후보가 없어요");
+      return;
+    }
+    setWorking(true);
+    try {
+      await upsertMealPlan(date, slot, pick.id);
+      showToast(`${futureDateLabel(date)} ${slot} → ${pick.name}`);
+      await reload();
+    } catch {
+      showToast("저장에 실패했어요. 잠시 후 다시 시도해주세요");
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  /** 직접 선택한 요리를 칸에 배정 */
+  async function selectDish(dish: DishWithLastEaten) {
+    if (!picking) return;
+    const { date, slot } = picking;
+    setPicking(null);
+    setWorking(true);
+    try {
+      await upsertMealPlan(date, slot, dish.id);
+      showToast(`${futureDateLabel(date)} ${slot} → ${dish.name}`);
+      await reload();
+    } catch {
+      showToast("저장에 실패했어요. 잠시 후 다시 시도해주세요");
+    } finally {
+      setWorking(false);
+    }
+  }
+
+  async function removeSlot(date: string, slot: MealSlot) {
+    const current = planBySlot.get(slotKey(date, slot));
+    if (!current || working) return;
+    setWorking(true);
+    try {
+      await deleteMealPlan(current.id);
+      await reload();
+    } catch {
+      showToast("삭제에 실패했어요. 잠시 후 다시 시도해주세요");
+    } finally {
+      setWorking(false);
+    }
+  }
 
   // 장보기 리스트: 이번 주 식단의 재료를 합산 (재료명 → 사용 요리 목록)
   const shoppingList = useMemo(() => {
@@ -115,86 +222,10 @@ export default function PlanPage() {
     }
   }
 
-  /** 이번 주에 이미 배정된 요리 id 목록 (중복 방지용) */
-  function plannedDishIds(except?: string): string[] {
-    return (plans ?? [])
-      .filter((p) => p.plan_date !== except)
-      .map((p) => p.dish_id);
-  }
-
-  /** 빈 날들을 가중치 추첨으로 채우기 */
-  async function fillEmptyDays() {
-    if (!dishes || dishes.length === 0 || working) return;
-    const emptyDates = dates.filter((d) => !planByDate.has(d));
-    if (emptyDates.length === 0) {
-      showToast("이미 모든 날이 채워져 있어요");
-      return;
-    }
-    setWorking(true);
-    try {
-      const exclude = plannedDishIds();
-      let filled = 0;
-      for (const date of emptyDates) {
-        const pick = pickRecommendation(dishes, DEFAULT_RECOMMENDATION_CONFIG, {
-          excludeIds: exclude,
-        });
-        if (!pick) break; // 후보 소진 (요리 수 < 7일)
-        await upsertMealPlan(date, pick.id);
-        exclude.push(pick.id);
-        filled++;
-      }
-      showToast(`${filled}일 식단을 채웠어요`);
-      await reload();
-    } catch {
-      showToast("저장에 실패했어요. 잠시 후 다시 시도해주세요");
-    } finally {
-      setWorking(false);
-    }
-  }
-
-  /** 하루 재추첨 (이번 주 다른 요리 + 현재 요리 제외) */
-  async function rerollDay(date: string) {
-    if (!dishes || working) return;
-    const current = planByDate.get(date);
-    const exclude = plannedDishIds(date);
-    if (current) exclude.push(current.dish_id);
-    const pick = pickRecommendation(dishes, DEFAULT_RECOMMENDATION_CONFIG, {
-      excludeIds: exclude,
-    });
-    if (!pick) {
-      showToast("바꿀 수 있는 다른 후보가 없어요");
-      return;
-    }
-    setWorking(true);
-    try {
-      await upsertMealPlan(date, pick.id);
-      showToast(`${futureDateLabel(date)} → ${pick.name}`);
-      await reload();
-    } catch {
-      showToast("저장에 실패했어요. 잠시 후 다시 시도해주세요");
-    } finally {
-      setWorking(false);
-    }
-  }
-
-  async function removeDay(date: string) {
-    const current = planByDate.get(date);
-    if (!current || working) return;
-    setWorking(true);
-    try {
-      await deleteMealPlan(current.id);
-      await reload();
-    } catch {
-      showToast("삭제에 실패했어요. 잠시 후 다시 시도해주세요");
-    } finally {
-      setWorking(false);
-    }
-  }
-
   return (
     <main className="px-5 pb-8 pt-10">
       <span className="glass-surface inline-flex items-center gap-1.5 rounded-full px-[13px] py-[7px] text-[12px] font-bold text-blue-acc">
-        🗓️ 일주일 저녁 걱정 끝
+        🗓️ 일주일 식사 걱정 끝
       </span>
       <h1 className="mt-3 text-[24px] font-black tracking-[-0.02em] text-ink">
         식단표
@@ -208,7 +239,7 @@ export default function PlanPage() {
         <EmptyState
           emoji="😵"
           title="식단표를 불러오지 못했어요"
-          description="Supabase에서 003_meal_plans.sql을 실행했는지 확인해주세요"
+          description="Supabase에서 003, 005 SQL을 실행했는지 확인해주세요"
           actionLabel="다시 시도"
           onAction={reload}
         />
@@ -230,11 +261,11 @@ export default function PlanPage() {
         <>
           <button
             type="button"
-            onClick={fillEmptyDays}
+            onClick={fillEmptyDinners}
             disabled={working}
             className="grad-primary shadow-btn-grad press-effect mt-5 h-[54px] w-full rounded-[20px] text-[16px] font-extrabold text-white disabled:opacity-40 disabled:shadow-none"
           >
-            {working ? "채우는 중..." : "빈 날 채우기 ✨"}
+            {working ? "처리 중..." : "빈 저녁 채우기 ✨"}
           </button>
           <button
             type="button"
@@ -244,69 +275,105 @@ export default function PlanPage() {
             🛒 장보기 리스트
           </button>
 
-          <div className="mt-5 flex flex-col gap-2.5">
-            {dates.map((date) => {
-              const plan = planByDate.get(date);
-              const dish = plan?.dish ?? null;
-              return (
-                <div key={date}>
-                  <p className="mb-1.5 text-[12px] font-extrabold text-sub">
-                    {futureDateLabel(date)}
-                  </p>
-                  {dish ? (
-                    <div className="glass-card shadow-list-lv flex items-center gap-3 rounded-[20px] px-4 py-3">
-                      <div className="tile-ring flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-[22px]">
-                        {CATEGORY_EMOJI[dish.category]}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-[15px] font-extrabold text-ink">
-                          {dish.name}
-                        </p>
-                        <div className="mt-0.5 flex items-center gap-1.5">
-                          <Badge tone="blue" size="sm">
-                            {dish.category}
-                          </Badge>
-                          <Badge size="sm">{dish.effort}</Badge>
-                          {dish.cook_time != null && (
-                            <Badge size="sm">{dish.cook_time}분</Badge>
-                          )}
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => rerollDay(date)}
-                        disabled={working}
-                        aria-label="다시 뽑기"
-                        className="press-effect hit-44 shrink-0 rounded-full border border-blue-btn/[.28] px-2.5 py-2 text-[14px] text-blue-btn"
+          <div className="mt-5 flex flex-col gap-3">
+            {dates.map((date) => (
+              <section key={date}>
+                <p className="mb-1.5 text-[12px] font-extrabold text-sub">
+                  {futureDateLabel(date)}
+                </p>
+                <div className="glass-card shadow-list-lv rounded-[20px] px-4">
+                  {MEAL_SLOTS.map((slot, idx) => {
+                    const plan = planBySlot.get(slotKey(date, slot));
+                    const dish = plan?.dish ?? null;
+                    return (
+                      <div
+                        key={slot}
+                        className={`flex min-h-[52px] items-center gap-2.5 py-2 ${
+                          idx > 0 ? "border-t border-[#eef2f6]" : ""
+                        }`}
                       >
-                        ↻
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeDay(date)}
-                        disabled={working}
-                        aria-label="비우기"
-                        className="press-effect -m-1 p-1 text-[13px] font-bold text-[#b3bcc7]"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => rerollDay(date)}
-                      disabled={working}
-                      className="glass-surface press-effect flex w-full items-center justify-center gap-1.5 rounded-[20px] border-dashed py-4 text-[14px] font-bold text-sub"
-                    >
-                      + 메뉴 뽑기
-                    </button>
-                  )}
+                        <span className="w-[30px] shrink-0 text-[11px] font-extrabold text-muted">
+                          {slot}
+                        </span>
+                        {dish ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => setPicking({ date, slot })}
+                              disabled={working}
+                              className="press-effect flex min-w-0 flex-1 items-center gap-2 text-left"
+                            >
+                              <span className="text-[18px]">
+                                {CATEGORY_EMOJI[dish.category]}
+                              </span>
+                              <span className="min-w-0 flex-1 truncate text-[14px] font-bold text-ink">
+                                {dish.name}
+                              </span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => rollSlot(date, slot)}
+                              disabled={working}
+                              aria-label="다시 뽑기"
+                              className="press-effect hit-44 shrink-0 rounded-full border border-blue-btn/[.28] px-2 py-1.5 text-[13px] text-blue-btn"
+                            >
+                              ↻
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => removeSlot(date, slot)}
+                              disabled={working}
+                              aria-label="비우기"
+                              className="press-effect -m-1.5 p-1.5 text-[12px] font-bold text-[#b3bcc7]"
+                            >
+                              ✕
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <span className="min-w-0 flex-1 text-[13px] font-semibold text-muted">
+                              비어 있음
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => rollSlot(date, slot)}
+                              disabled={working}
+                              className="press-effect hit-44 shrink-0 rounded-full border border-blue-btn/[.28] px-2.5 py-1.5 text-[11px] font-extrabold text-blue-btn"
+                            >
+                              🎲 뽑기
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setPicking({ date, slot })}
+                              disabled={working}
+                              className="press-effect hit-44 shrink-0 rounded-full border border-[#d5dce4] bg-white/70 px-2.5 py-1.5 text-[11px] font-extrabold text-[#44515f]"
+                            >
+                              선택
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-              );
-            })}
+              </section>
+            ))}
           </div>
         </>
       )}
+
+      {/* 직접 선택 바텀시트 */}
+      <DishPickerSheet
+        open={picking !== null}
+        onClose={() => setPicking(null)}
+        title={
+          picking
+            ? `${futureDateLabel(picking.date)} ${picking.slot} 메뉴 선택`
+            : "메뉴 선택"
+        }
+        dishes={dishes}
+        onSelect={selectDish}
+      />
 
       {/* 장보기 리스트 바텀시트 */}
       <BottomSheet

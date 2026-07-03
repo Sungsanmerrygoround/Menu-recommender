@@ -224,6 +224,15 @@ export default function DishesPage() {
         open={editing !== null}
         onClose={() => setEditing(null)}
         title="요리 수정"
+        titleAction={
+          <button
+            type="button"
+            onClick={handleDelete}
+            className="press-effect hit-44 rounded-[10px] px-2 py-1 text-[13px] font-extrabold text-[#e5484d]"
+          >
+            삭제
+          </button>
+        }
       >
         {editing && (
           <DishForm
@@ -236,7 +245,6 @@ export default function DishesPage() {
               ingredients: editing.ingredients ?? [],
             }}
             onSubmit={handleUpdate}
-            onDelete={handleDelete}
           />
         )}
       </BottomSheet>

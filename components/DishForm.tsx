@@ -9,14 +9,12 @@ interface DishFormProps {
   initial?: DishInput;
   submitLabel?: string;
   onSubmit: (input: DishInput) => Promise<void> | void;
-  onDelete?: () => Promise<void> | void;
 }
 
 export default function DishForm({
   initial,
   submitLabel = "저장하기",
   onSubmit,
-  onDelete,
 }: DishFormProps) {
   const [name, setName] = useState(initial?.name ?? "");
   const [category, setCategory] = useState<Category | null>(
@@ -154,16 +152,6 @@ export default function DishForm({
       >
         {submitting ? "저장 중..." : submitLabel}
       </button>
-
-      {onDelete && (
-        <button
-          type="button"
-          onClick={onDelete}
-          className="press-effect -mt-1 h-[48px] w-full rounded-2xl text-[14px] font-bold text-[#e5484d]"
-        >
-          삭제하기
-        </button>
-      )}
     </div>
   );
 }

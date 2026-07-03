@@ -26,7 +26,8 @@ npm run dev
    - [`002_seed.sql`](supabase/migrations/002_seed.sql) — 예시 요리 20개
    - [`003_meal_plans.sql`](supabase/migrations/003_meal_plans.sql) — 주간 식단표 테이블
    - [`004_ingredients.sql`](supabase/migrations/004_ingredients.sql) — 재료 컬럼 + 시드 요리 재료
-4. 앱을 새로고침하면 됩니다 (이미 001/002를 실행했다면 003/004만 실행)
+   - [`005_meal_slots.sql`](supabase/migrations/005_meal_slots.sql) — 식단표 아침/점심/저녁 구분
+4. 앱을 새로고침하면 됩니다 (이미 실행한 번호는 건너뛰고 새 번호만 실행)
 
 ### 2. GitHub에 push
 

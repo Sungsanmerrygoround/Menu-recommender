@@ -32,9 +32,13 @@ export interface MealLogWithDish extends MealLog {
   dish: Pick<Dish, "id" | "name" | "category"> | null;
 }
 
+export const MEAL_SLOTS = ["아침", "점심", "저녁"] as const;
+export type MealSlot = (typeof MEAL_SLOTS)[number];
+
 export interface MealPlan {
   id: string;
   plan_date: string; // YYYY-MM-DD
+  meal_slot: MealSlot;
   dish_id: string;
   created_at: string;
 }
