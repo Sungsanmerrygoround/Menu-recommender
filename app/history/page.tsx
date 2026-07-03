@@ -318,7 +318,7 @@ export default function HistoryPage() {
       )}
 
       {/* 플로팅 + 버튼: 추천 없이 직접 기록 */}
-      <div className="pointer-events-none fixed bottom-[92px] left-1/2 z-30 flex w-full max-w-[480px] -translate-x-1/2 justify-end px-[18px]">
+      <div className="pointer-events-none fixed bottom-[calc(92px+env(safe-area-inset-bottom))] left-1/2 z-30 flex w-full max-w-[480px] -translate-x-1/2 justify-end px-[18px]">
         <button
           type="button"
           onClick={() => setLogOpen(true)}

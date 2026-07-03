@@ -53,7 +53,7 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-3.5 z-30 flex justify-center px-3.5">
+    <nav className="fixed inset-x-0 bottom-[calc(14px+env(safe-area-inset-bottom))] z-30 flex justify-center px-3.5">
       <div className="glass-card flex w-full max-w-[452px] rounded-full p-[7px] shadow-[0_10px_28px_rgba(70,120,180,.18)]">
         {TABS.map(({ href, label, Icon }) => {
           const active = pathname === href;

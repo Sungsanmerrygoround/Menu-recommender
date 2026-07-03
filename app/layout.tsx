@@ -30,6 +30,8 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
+  // env(safe-area-inset-*)가 실제 값을 갖도록 (홈 인디케이터 회피)
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#e9f3ff" },
     { media: "(prefers-color-scheme: dark)", color: "#0d1219" },
@@ -60,7 +62,7 @@ export default function RootLayout({
               <div className="blob blob-3" />
             </div>
           </div>
-          <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[480px] pb-32">
+          <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[480px] pb-[calc(8rem+env(safe-area-inset-bottom))]">
             {children}
           </div>
           <BottomNav />

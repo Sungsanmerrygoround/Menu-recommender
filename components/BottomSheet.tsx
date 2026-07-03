@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 interface BottomSheetProps {
   open: boolean;
@@ -18,6 +19,10 @@ export default function BottomSheet({
   titleAction,
   children,
 }: BottomSheetProps) {
+  // SSR에는 document가 없으므로 마운트 후에만 포털 렌더
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   // 시트가 열려 있는 동안 배경 스크롤 잠금
   useEffect(() => {
     if (!open) return;
@@ -28,16 +33,18 @@ export default function BottomSheet({
     };
   }, [open]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
-  return (
+  // 페이지 래퍼(z-10)의 스택 컨텍스트에 갇히면 하단 탭(z-30)이 시트를 덮으므로
+  // body에 포털로 렌더해 항상 최상위에 표시
+  return createPortal(
     <div className="fixed inset-0 z-40">
       <div
-        className="animate-fade-in absolute inset-0 bg-[#17202b]/40 backdrop-blur-[2px]"
+        className="animate-fade-in absolute inset-0 touch-none bg-[#17202b]/40 backdrop-blur-[2px]"
         onClick={onClose}
       />
       <div className="absolute inset-x-0 bottom-0 mx-auto w-full max-w-[480px]">
-        <div className="sheet-surface animate-sheet-up max-h-[85dvh] overflow-y-auto rounded-t-[28px] px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
+        <div className="sheet-surface animate-sheet-up max-h-[85dvh] overflow-y-auto overscroll-contain rounded-t-[28px] px-5 pb-[calc(2rem+env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl">
           <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-line" />
           {title && (
             <div className="mb-5 flex items-center justify-between">
@@ -48,6 +55,7 @@ export default function BottomSheet({
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
