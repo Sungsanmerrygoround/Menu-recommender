@@ -1,15 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Badge from "@/components/Badge";
 import BottomSheet from "@/components/BottomSheet";
 import Chip from "@/components/Chip";
+import ConfirmSheet from "@/components/ConfirmSheet";
 import DishForm from "@/components/DishForm";
 import EmptyState from "@/components/EmptyState";
 import SkeletonList from "@/components/Skeleton";
 import { useToast } from "@/components/Toast";
+import { updateCached, useCachedQuery } from "@/lib/cache";
 import { daysBetween, todayString } from "@/lib/date-utils";
-import { CATEGORY_EMOJI } from "@/lib/emoji";
+import { dishEmoji } from "@/lib/emoji";
 import {
   addDish,
   deleteDish,
@@ -22,6 +24,7 @@ import {
   CATEGORIES,
   type Category,
   type DishWithLastEaten,
+  type MealLogWithDish,
 } from "@/lib/types";
 
 function lastEatenLabel(lastEatenAt: string | null): string {
@@ -33,27 +36,19 @@ function lastEatenLabel(lastEatenAt: string | null): string {
 }
 
 export default function DishesPage() {
-  const [dishes, setDishes] = useState<DishWithLastEaten[] | null>(null);
-  const [error, setError] = useState(false);
+  const today = todayString();
+  const {
+    data: dishes,
+    error,
+    reload,
+    mutate: mutateDishes,
+  } = useCachedQuery("dishes", fetchDishesWithLastEaten);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<Category | null>(null);
   const [addOpen, setAddOpen] = useState(false);
   const [editing, setEditing] = useState<DishWithLastEaten | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const showToast = useToast();
-
-  const reload = useCallback(async () => {
-    try {
-      setError(false);
-      setDishes(await fetchDishesWithLastEaten());
-    } catch {
-      setError(true);
-      setDishes([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    reload();
-  }, [reload]);
 
   const filtered = useMemo(() => {
     if (!dishes) return [];
@@ -74,25 +69,55 @@ export default function DishesPage() {
 
   async function handleUpdate(input: DishInput) {
     if (!editing) return;
-    await updateDish(editing.id, input);
+    const id = editing.id;
     setEditing(null);
+    // 낙관적 반영 후 저장
+    mutateDishes(
+      (ds) => ds?.map((d) => (d.id === id ? { ...d, ...input } : d)) ?? ds
+    );
     showToast("수정했어요");
-    reload();
+    try {
+      await updateDish(id, input);
+    } catch {
+      showToast("수정에 실패했어요. 잠시 후 다시 시도해주세요");
+      reload();
+    }
   }
 
   async function handleDelete() {
     if (!editing) return;
-    if (!window.confirm(`'${editing.name}'을(를) 삭제할까요?\n먹은 기록도 함께 삭제돼요.`)) return;
-    await deleteDish(editing.id);
+    const target = editing;
+    setConfirmDelete(false);
     setEditing(null);
-    showToast("삭제했어요");
-    reload();
+    mutateDishes((ds) => ds?.filter((d) => d.id !== target.id) ?? ds);
+    updateCached<MealLogWithDish[]>("logs", () => null);
+    showToast(`${target.name}을(를) 삭제했어요`);
+    try {
+      await deleteDish(target.id);
+    } catch {
+      showToast("삭제에 실패했어요. 잠시 후 다시 시도해주세요");
+      reload();
+    }
   }
 
   async function handleEat(dish: DishWithLastEaten) {
-    await logMeal(dish.id);
+    mutateDishes(
+      (ds) =>
+        ds?.map((d) =>
+          d.id === dish.id ? { ...d, last_eaten_at: today } : d
+        ) ?? ds
+    );
+    updateCached<MealLogWithDish[]>("logs", () => null);
+    updateCached<string[]>(`eaten:${today}`, (ids) =>
+      ids ? [...ids, dish.id] : ids
+    );
     showToast(`${dish.name}을(를) 기록했어요`);
-    reload();
+    try {
+      await logMeal(dish.id);
+    } catch {
+      showToast("기록에 실패했어요. 잠시 후 다시 시도해주세요");
+      reload();
+    }
   }
 
   return (
@@ -134,9 +159,9 @@ export default function DishesPage() {
 
       {/* 리스트 */}
       <div className="mt-4 flex flex-col gap-3">
-        {dishes === null ? (
+        {dishes === null && !error ? (
           <SkeletonList />
-        ) : error ? (
+        ) : error && !dishes ? (
           <EmptyState
             emoji="😵"
             title="데이터를 불러오지 못했어요"
@@ -145,7 +170,7 @@ export default function DishesPage() {
             onAction={reload}
           />
         ) : filtered.length === 0 ? (
-          dishes.length === 0 ? (
+          (dishes ?? []).length === 0 ? (
             <EmptyState
               emoji="🍳"
               title="아직 등록된 요리가 없어요"
@@ -164,7 +189,7 @@ export default function DishesPage() {
               onClick={() => setEditing(dish)}
             >
               <div className="tile-ring flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-[24px]">
-                {CATEGORY_EMOJI[dish.category]}
+                {dishEmoji(dish)}
               </div>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-[16px] font-extrabold text-ink">
@@ -221,13 +246,13 @@ export default function DishesPage() {
 
       {/* 수정/삭제 바텀시트 */}
       <BottomSheet
-        open={editing !== null}
+        open={editing !== null && !confirmDelete}
         onClose={() => setEditing(null)}
         title="요리 수정"
         titleAction={
           <button
             type="button"
-            onClick={handleDelete}
+            onClick={() => setConfirmDelete(true)}
             className="press-effect hit-44 rounded-[10px] px-2 py-1 text-[13px] font-extrabold text-[#e5484d]"
           >
             삭제
@@ -243,11 +268,21 @@ export default function DishesPage() {
               cook_time: editing.cook_time,
               tags: editing.tags,
               ingredients: editing.ingredients ?? [],
+              emoji: editing.emoji ?? null,
             }}
             onSubmit={handleUpdate}
           />
         )}
       </BottomSheet>
+
+      {/* 삭제 확인 시트 */}
+      <ConfirmSheet
+        open={confirmDelete && editing !== null}
+        onClose={() => setConfirmDelete(false)}
+        title={`'${editing?.name}' 삭제`}
+        description={"이 요리의 먹은 기록과 식단표 배정도 함께 삭제돼요."}
+        onConfirm={handleDelete}
+      />
     </main>
   );
 }

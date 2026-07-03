@@ -13,6 +13,8 @@ export interface Dish {
   tags: string[];
   /** 004 마이그레이션 이전 데이터에는 없을 수 있음 */
   ingredients?: string[];
+  /** 요리별 이모지 (006). 비어 있으면 종류별 기본 이모지 사용 */
+  emoji?: string | null;
   created_at: string;
 }
 
@@ -29,7 +31,7 @@ export interface DishWithLastEaten extends Dish {
 }
 
 export interface MealLogWithDish extends MealLog {
-  dish: Pick<Dish, "id" | "name" | "category"> | null;
+  dish: Dish | null;
 }
 
 export const MEAL_SLOTS = ["아침", "점심", "저녁"] as const;

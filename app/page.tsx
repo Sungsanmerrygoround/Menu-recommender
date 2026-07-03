@@ -1,22 +1,30 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Badge from "@/components/Badge";
 import Chip from "@/components/Chip";
 import EmptyState from "@/components/EmptyState";
 import { useToast } from "@/components/Toast";
 import Link from "next/link";
+import { updateCached, useCachedQuery } from "@/lib/cache";
 import { daysBetween, todayString } from "@/lib/date-utils";
-import { CATEGORY_EMOJI } from "@/lib/emoji";
-import { fetchDishesWithLastEaten, logMeal } from "@/lib/queries";
+import { dishEmoji } from "@/lib/emoji";
+import {
+  fetchDishesWithLastEaten,
+  fetchEatenDishIds,
+  fetchMealPlans,
+  logMeal,
+} from "@/lib/queries";
 import { DEFAULT_RECOMMENDATION_CONFIG } from "@/lib/recommendation-config";
 import { pickRecommendation } from "@/lib/recommendation";
 import {
   CATEGORIES,
   EFFORTS,
+  MEAL_SLOTS,
   type Category,
   type DishWithLastEaten,
   type Effort,
+  type MealLogWithDish,
 } from "@/lib/types";
 
 function LastEatenText({ lastEatenAt }: { lastEatenAt: string | null }) {
@@ -45,8 +53,21 @@ function LastEatenText({ lastEatenAt }: { lastEatenAt: string | null }) {
 }
 
 export default function HomePage() {
-  const [dishes, setDishes] = useState<DishWithLastEaten[] | null>(null);
-  const [error, setError] = useState(false);
+  const today = todayString();
+  const {
+    data: dishes,
+    error,
+    reload,
+    mutate: mutateDishes,
+  } = useCachedQuery("dishes", fetchDishesWithLastEaten);
+  const { data: todayPlans } = useCachedQuery(`plans:${today}:${today}`, () =>
+    fetchMealPlans(today, today)
+  );
+  const { data: eatenIds, mutate: mutateEaten } = useCachedQuery(
+    `eaten:${today}`,
+    () => fetchEatenDishIds(today)
+  );
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [efforts, setEfforts] = useState<Effort[]>([]);
   const [picked, setPicked] = useState<DishWithLastEaten | null>(null);
@@ -65,20 +86,6 @@ export default function HomePage() {
     };
   }, []);
 
-  const reload = useCallback(async () => {
-    try {
-      setError(false);
-      setDishes(await fetchDishesWithLastEaten());
-    } catch {
-      setError(true);
-      setDishes([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    reload();
-  }, [reload]);
-
   const candidates = useMemo(() => {
     if (!dishes) return [];
     return dishes.filter((d) => {
@@ -93,6 +100,42 @@ export default function HomePage() {
     return list.includes(value)
       ? list.filter((v) => v !== value)
       : [...list, value];
+  }
+
+  /** 낙관적 먹었어요: 화면/캐시 즉시 반영 후 서버 저장, 실패 시 롤백 */
+  async function optimisticLog(dish: DishWithLastEaten): Promise<boolean> {
+    mutateEaten((ids) => [...(ids ?? []), dish.id]);
+    mutateDishes(
+      (ds) =>
+        ds?.map((d) =>
+          d.id === dish.id ? { ...d, last_eaten_at: today } : d
+        ) ?? ds
+    );
+    updateCached<MealLogWithDish[]>("logs", (prev) =>
+      prev
+        ? [
+            {
+              id: `temp-${Date.now()}`,
+              dish_id: dish.id,
+              eaten_at: today,
+              created_at: new Date().toISOString(),
+              dish,
+            },
+            ...prev,
+          ]
+        : prev
+    );
+    showToast(`${dish.name}을(를) 기록했어요`);
+    try {
+      await logMeal(dish.id);
+      updateCached<MealLogWithDish[]>("logs", () => null); // 임시 id 정리(다음 방문 시 재조회)
+      return true;
+    } catch {
+      showToast("기록에 실패했어요. 잠시 후 다시 시도해주세요");
+      mutateEaten((ids) => (ids ?? []).filter((id) => id !== dish.id));
+      reload();
+      return false;
+    }
   }
 
   function reveal(result: DishWithLastEaten) {
@@ -119,7 +162,6 @@ export default function HomePage() {
     setNoCandidates(false);
 
     // 룰렛 연출: 후보 이름이 슬롯처럼 지나가다 당첨 메뉴에서 멈춘다.
-    // 후보가 1개뿐이거나 사용자가 모션 축소를 원하면 바로 공개.
     const pool = candidates.filter((d) => !excludeIds.includes(d.id));
     const reduceMotion = window.matchMedia(
       "(prefers-reduced-motion: reduce)"
@@ -148,16 +190,19 @@ export default function HomePage() {
 
   async function handleEat() {
     if (!picked || eaten) return;
-    try {
-      await logMeal(picked.id);
-    } catch {
-      showToast("기록에 실패했어요. 잠시 후 다시 시도해주세요");
-      return;
-    }
     setEaten(true);
-    showToast(`${picked.name}을(를) 기록했어요`);
-    reload();
+    const ok = await optimisticLog(picked);
+    if (!ok) setEaten(false);
   }
+
+  // 오늘의 식단 (채워진 끼니만)
+  const todaySlots = useMemo(() => {
+    if (!todayPlans) return [];
+    return MEAL_SLOTS.map((slot) => ({
+      slot,
+      plan: todayPlans.find((p) => p.meal_slot === slot) ?? null,
+    })).filter((s) => s.plan?.dish);
+  }, [todayPlans]);
 
   return (
     <main className="px-5 pb-8 pt-10">
@@ -169,6 +214,56 @@ export default function HomePage() {
         <br />
         <span className="grad-text">해드실래요?</span>
       </h1>
+
+      {/* 오늘의 식단 (식단표와 연동) */}
+      {todaySlots.length > 0 && (
+        <section className="glass-card shadow-panel-lv mt-[22px] rounded-[20px] px-4 py-1">
+          <div className="flex items-center justify-between pb-1 pt-3">
+            <p className="text-[12px] font-extrabold text-teal-acc">
+              🗓️ 오늘의 식단
+            </p>
+            <Link
+              href="/plan"
+              className="text-[11px] font-bold text-muted underline-offset-2"
+            >
+              식단표 보기 →
+            </Link>
+          </div>
+          {todaySlots.map(({ slot, plan }) => {
+            const dish = plan!.dish!;
+            const done = (eatenIds ?? []).includes(dish.id);
+            return (
+              <div
+                key={slot}
+                className="flex min-h-[48px] items-center gap-2.5 border-t border-[#eef2f6] py-1.5"
+              >
+                <span className="w-[30px] shrink-0 text-[11px] font-extrabold text-muted">
+                  {slot}
+                </span>
+                <span className="text-[18px]">{dishEmoji(dish)}</span>
+                <span className="min-w-0 flex-1 truncate text-[14px] font-bold text-ink">
+                  {dish.name}
+                </span>
+                {done ? (
+                  <span className="shrink-0 px-1 text-[12px] font-extrabold text-teal-acc">
+                    먹었어요 ✓
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      optimisticLog({ ...dish, last_eaten_at: null })
+                    }
+                    className="press-effect hit-44 shrink-0 rounded-[12px] border border-blue-btn/[.28] px-2.5 py-1.5 text-[11px] font-extrabold text-blue-btn"
+                  >
+                    먹었어요
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </section>
+      )}
 
       {/* 필터 패널 */}
       <section className="glass-surface shadow-panel-lv mt-[22px] rounded-3xl p-5">
@@ -204,7 +299,7 @@ export default function HomePage() {
           type="button"
           onClick={() => recommend()}
           disabled={rolling}
-          className="glass-surface press-effect mt-3.5 h-[54px] w-full rounded-[20px] text-[16px] font-bold text-[#44515f] disabled:opacity-60"
+          className="glass-surface press-effect mt-3.5 h-[54px] w-full rounded-[20px] text-[16px] font-bold text-chip-ink disabled:opacity-60"
         >
           다시 추천받기
         </button>
@@ -227,7 +322,7 @@ export default function HomePage() {
           </span>
           <div className="mt-4 flex items-center gap-3.5">
             <div className="tile-ring flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] text-[34px]">
-              {CATEGORY_EMOJI[rollingDish.category]}
+              {dishEmoji(rollingDish)}
             </div>
             <h2 className="truncate text-[32px] font-black tracking-[-0.02em] text-ink opacity-60">
               {rollingDish.name}
@@ -250,7 +345,7 @@ export default function HomePage() {
           </div>
           <div className="mt-4 flex items-center gap-3.5">
             <div className="tile-ring flex h-16 w-16 shrink-0 items-center justify-center rounded-[22px] text-[34px]">
-              {CATEGORY_EMOJI[picked.category]}
+              {dishEmoji(picked)}
             </div>
             <h2 className="text-[32px] font-black tracking-[-0.02em] text-ink">
               {picked.name}
@@ -282,7 +377,7 @@ export default function HomePage() {
           <button
             type="button"
             onClick={() => recommend([picked.id])}
-            className="glass-surface press-effect mt-2.5 h-[52px] w-full rounded-2xl text-[14px] font-bold text-[#44515f]"
+            className="glass-surface press-effect mt-2.5 h-[52px] w-full rounded-2xl text-[14px] font-bold text-chip-ink"
           >
             다른 메뉴 볼래요
           </button>
@@ -290,7 +385,7 @@ export default function HomePage() {
       )}
 
       {/* 빈 상태들 */}
-      {error && (
+      {error && !dishes && (
         <EmptyState
           emoji="😵"
           title="데이터를 불러오지 못했어요"
@@ -299,7 +394,7 @@ export default function HomePage() {
           onAction={reload}
         />
       )}
-      {!error && dishes !== null && dishes.length === 0 && (
+      {dishes !== null && dishes.length === 0 && (
         <EmptyState
           emoji="🍳"
           title="아직 등록된 요리가 없어요"

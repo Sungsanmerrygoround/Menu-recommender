@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Chip from "./Chip";
+import { CATEGORY_EMOJI, EMOJI_CHOICES } from "@/lib/emoji";
 import { CATEGORIES, EFFORTS, type Category, type Effort } from "@/lib/types";
 import type { DishInput } from "@/lib/queries";
 
@@ -28,6 +29,7 @@ export default function DishForm({
   const [ingredientsText, setIngredientsText] = useState(
     initial?.ingredients?.join(", ") ?? ""
   );
+  const [emoji, setEmoji] = useState<string | null>(initial?.emoji ?? null);
   const [submitting, setSubmitting] = useState(false);
 
   const valid = name.trim().length > 0 && category !== null && effort !== null;
@@ -50,6 +52,7 @@ export default function DishForm({
           .split(",")
           .map((t) => t.trim())
           .filter(Boolean),
+        emoji,
       });
     } finally {
       setSubmitting(false);
@@ -85,6 +88,31 @@ export default function DishForm({
               selected={category === c}
               onClick={() => setCategory(c)}
             />
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="mb-2 block text-[12px] font-extrabold text-sub">
+          아이콘
+          <span className="ml-1.5 font-semibold text-muted">
+            (없으면 종류 기본{category ? ` ${CATEGORY_EMOJI[category]}` : ""})
+          </span>
+        </label>
+        <div className="flex flex-wrap gap-1.5">
+          {EMOJI_CHOICES.map((e) => (
+            <button
+              key={e}
+              type="button"
+              onClick={() => setEmoji(emoji === e ? null : e)}
+              className={`press-effect flex h-10 w-10 items-center justify-center rounded-[12px] text-[20px] ${
+                emoji === e
+                  ? "grad-tint ring-2 ring-grad-start/60"
+                  : "bg-[#f1f4f8]"
+              }`}
+            >
+              {e}
+            </button>
           ))}
         </div>
       </div>

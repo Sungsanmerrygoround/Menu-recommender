@@ -1,6 +1,21 @@
 import type { Category } from "./types";
 
-/** 종류별 기본 이모지 (요리별 이모지 필드가 생기기 전까지의 매핑) */
+/** 요리에 표시할 이모지: 직접 지정한 이모지 > 종류별 기본 이모지 */
+export function dishEmoji(dish: {
+  category: Category;
+  emoji?: string | null;
+}): string {
+  return dish.emoji || CATEGORY_EMOJI[dish.category];
+}
+
+/** 요리 폼에서 고를 수 있는 이모지 후보 */
+export const EMOJI_CHOICES = [
+  "🍲", "🥘", "🥣", "🍚", "🍛", "🍜", "🍝", "🍕",
+  "🍳", "🥚", "🥩", "🍖", "🥓", "🍗", "🐟", "🦐",
+  "🦑", "🥟", "🍤", "🌶️", "🍅", "🥗", "🍢", "🍞",
+] as const;
+
+/** 종류별 기본 이모지 (요리별 이모지가 없을 때의 매핑) */
 export const CATEGORY_EMOJI: Record<Category, string> = {
   한식: "🍲",
   중식: "🥘",

@@ -17,6 +17,7 @@ export interface DishInput {
   cook_time: number | null;
   tags: string[];
   ingredients?: string[];
+  emoji?: string | null;
 }
 
 /** 전체 요리 + 각 요리의 마지막 취식일(meal_logs의 max(eaten_at))을 조회 */
@@ -40,7 +41,7 @@ export async function fetchDishesWithLastEaten(): Promise<DishWithLastEaten[]> {
   }));
 }
 
-/** 004(ingredients 컬럼) 미적용 DB에서도 동작하도록 컬럼 오류 시 재시도 */
+/** 004/006(선택 컬럼) 미적용 DB에서도 동작하도록 컬럼 오류 시 재시도 */
 async function writeDish(
   input: DishInput,
   write: (
@@ -48,8 +49,8 @@ async function writeDish(
   ) => PromiseLike<{ error: { message: string } | null }>
 ): Promise<void> {
   let { error } = await write(input);
-  if (error && /ingredients/.test(error.message)) {
-    const { ingredients: _omit, ...rest } = input;
+  if (error && /(ingredients|emoji)/.test(error.message)) {
+    const { ingredients: _i, emoji: _e, ...rest } = input;
     ({ error } = await write(rest));
   }
   if (error) throw error;
@@ -85,11 +86,21 @@ export async function logMeal(
 export async function fetchMealLogs(): Promise<MealLogWithDish[]> {
   const { data, error } = await supabase
     .from("meal_logs")
-    .select("id, dish_id, eaten_at, created_at, dish:dishes(id, name, category)")
+    .select("id, dish_id, eaten_at, created_at, dish:dishes(*)")
     .order("eaten_at", { ascending: false })
     .order("created_at", { ascending: false });
   if (error) throw error;
   return (data ?? []) as unknown as MealLogWithDish[];
+}
+
+/** 특정 날짜에 먹은 요리 id 목록 (오늘의 식단 체크 표시용) */
+export async function fetchEatenDishIds(date: string): Promise<string[]> {
+  const { data, error } = await supabase
+    .from("meal_logs")
+    .select("dish_id")
+    .eq("eaten_at", date);
+  if (error) throw error;
+  return (data ?? []).map((r) => r.dish_id as string);
 }
 
 export async function deleteMealLog(id: string): Promise<void> {

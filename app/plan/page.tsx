@@ -1,14 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import BottomSheet from "@/components/BottomSheet";
 import DishPickerSheet from "@/components/DishPickerSheet";
 import EmptyState from "@/components/EmptyState";
 import SkeletonList from "@/components/Skeleton";
 import { useToast } from "@/components/Toast";
 import Link from "next/link";
+import { updateCached, useCachedQuery } from "@/lib/cache";
 import { addDays, futureDateLabel, todayString } from "@/lib/date-utils";
-import { CATEGORY_EMOJI } from "@/lib/emoji";
+import { dishEmoji } from "@/lib/emoji";
 import {
   deleteMealPlan,
   fetchDishesWithLastEaten,
@@ -31,9 +32,18 @@ function slotKey(date: string, slot: MealSlot): string {
 }
 
 export default function PlanPage() {
-  const [plans, setPlans] = useState<MealPlanWithDish[] | null>(null);
-  const [dishes, setDishes] = useState<DishWithLastEaten[] | null>(null);
-  const [error, setError] = useState(false);
+  const today = todayString();
+  const rangeEnd = addDays(today, PLAN_DAYS - 1);
+  const {
+    data: plans,
+    error,
+    reload,
+    mutate: mutatePlans,
+  } = useCachedQuery(`plans:${today}:${rangeEnd}`, () =>
+    fetchMealPlans(today, rangeEnd)
+  );
+  const { data: dishes } = useCachedQuery("dishes", fetchDishesWithLastEaten);
+
   const [working, setWorking] = useState(false);
   const [shopOpen, setShopOpen] = useState(false);
   const [checked, setChecked] = useState<Record<string, boolean>>({});
@@ -42,31 +52,10 @@ export default function PlanPage() {
   );
   const showToast = useToast();
 
-  const today = todayString();
   const dates = useMemo(
     () => Array.from({ length: PLAN_DAYS }, (_, i) => addDays(today, i)),
     [today]
   );
-
-  const reload = useCallback(async () => {
-    try {
-      setError(false);
-      const [planData, dishData] = await Promise.all([
-        fetchMealPlans(today, addDays(today, PLAN_DAYS - 1)),
-        fetchDishesWithLastEaten(),
-      ]);
-      setPlans(planData);
-      setDishes(dishData);
-    } catch {
-      setError(true);
-      setPlans([]);
-      setDishes([]);
-    }
-  }, [today]);
-
-  useEffect(() => {
-    reload();
-  }, [reload]);
 
   const planBySlot = useMemo(() => {
     const map = new Map<string, MealPlanWithDish>();
@@ -74,11 +63,42 @@ export default function PlanPage() {
     return map;
   }, [plans]);
 
+  /** 홈의 오늘 식단 캐시 무효화 (다음 방문 시 재조회) */
+  function invalidateHomePlans() {
+    updateCached(`plans:${today}:${today}`, () => null);
+  }
+
   /** 같은 날에 이미 배정된 요리 id 목록 (하루 중복 방지) */
   function sameDayDishIds(date: string, exceptSlot?: MealSlot): string[] {
     return (plans ?? [])
       .filter((p) => p.plan_date === date && p.meal_slot !== exceptSlot)
       .map((p) => p.dish_id);
+  }
+
+  /** 낙관적으로 칸을 채우고 서버에 저장 */
+  async function assignSlot(date: string, slot: MealSlot, dish: DishWithLastEaten) {
+    const current = planBySlot.get(slotKey(date, slot));
+    const optimistic: MealPlanWithDish = {
+      id: current?.id ?? `temp-${Date.now()}`,
+      plan_date: date,
+      meal_slot: slot,
+      dish_id: dish.id,
+      created_at: new Date().toISOString(),
+      dish,
+    };
+    mutatePlans((prev) => [
+      ...(prev ?? []).filter((p) => !(p.plan_date === date && p.meal_slot === slot)),
+      optimistic,
+    ]);
+    invalidateHomePlans();
+    showToast(`${futureDateLabel(date)} ${slot} → ${dish.name}`);
+    try {
+      await upsertMealPlan(date, slot, dish.id);
+      reload(); // 임시 id를 실제 데이터로 교체
+    } catch {
+      showToast("저장에 실패했어요. 잠시 후 다시 시도해주세요");
+      reload();
+    }
   }
 
   /** 저녁 빈 칸만 자동 추첨으로 채우기 (주간 저녁 중복 방지) */
@@ -105,6 +125,7 @@ export default function PlanPage() {
         filled++;
       }
       showToast(`저녁 ${filled}일을 채웠어요`);
+      invalidateHomePlans();
       await reload();
     } catch {
       showToast("저장에 실패했어요. 잠시 후 다시 시도해주세요");
@@ -114,8 +135,8 @@ export default function PlanPage() {
   }
 
   /** 한 칸 랜덤 뽑기/재추첨 (같은 날 다른 끼니 + 현재 요리 제외) */
-  async function rollSlot(date: string, slot: MealSlot) {
-    if (!dishes || working) return;
+  function rollSlot(date: string, slot: MealSlot) {
+    if (!dishes) return;
     const current = planBySlot.get(slotKey(date, slot));
     const exclude = sameDayDishIds(date, slot);
     if (current) exclude.push(current.dish_id);
@@ -126,46 +147,24 @@ export default function PlanPage() {
       showToast("바꿀 수 있는 다른 후보가 없어요");
       return;
     }
-    setWorking(true);
-    try {
-      await upsertMealPlan(date, slot, pick.id);
-      showToast(`${futureDateLabel(date)} ${slot} → ${pick.name}`);
-      await reload();
-    } catch {
-      showToast("저장에 실패했어요. 잠시 후 다시 시도해주세요");
-    } finally {
-      setWorking(false);
-    }
-  }
-
-  /** 직접 선택한 요리를 칸에 배정 */
-  async function selectDish(dish: DishWithLastEaten) {
-    if (!picking) return;
-    const { date, slot } = picking;
-    setPicking(null);
-    setWorking(true);
-    try {
-      await upsertMealPlan(date, slot, dish.id);
-      showToast(`${futureDateLabel(date)} ${slot} → ${dish.name}`);
-      await reload();
-    } catch {
-      showToast("저장에 실패했어요. 잠시 후 다시 시도해주세요");
-    } finally {
-      setWorking(false);
-    }
+    assignSlot(date, slot, pick);
   }
 
   async function removeSlot(date: string, slot: MealSlot) {
     const current = planBySlot.get(slotKey(date, slot));
-    if (!current || working) return;
-    setWorking(true);
+    if (!current) return;
+    mutatePlans(
+      (prev) =>
+        prev?.filter((p) => !(p.plan_date === date && p.meal_slot === slot)) ??
+        prev
+    );
+    invalidateHomePlans();
+    if (current.id.startsWith("temp-")) return;
     try {
       await deleteMealPlan(current.id);
-      await reload();
     } catch {
       showToast("삭제에 실패했어요. 잠시 후 다시 시도해주세요");
-    } finally {
-      setWorking(false);
+      reload();
     }
   }
 
@@ -231,11 +230,11 @@ export default function PlanPage() {
         식단표
       </h1>
 
-      {plans === null ? (
+      {plans === null && !error ? (
         <div className="mt-6">
           <SkeletonList count={5} />
         </div>
-      ) : error ? (
+      ) : error && !plans ? (
         <EmptyState
           emoji="😵"
           title="식단표를 불러오지 못했어요"
@@ -270,7 +269,7 @@ export default function PlanPage() {
           <button
             type="button"
             onClick={() => setShopOpen(true)}
-            className="glass-surface press-effect mt-2.5 h-[48px] w-full rounded-[20px] text-[14px] font-bold text-[#44515f]"
+            className="glass-surface press-effect mt-2.5 h-[48px] w-full rounded-[20px] text-[14px] font-bold text-chip-ink"
           >
             🛒 장보기 리스트
           </button>
@@ -300,11 +299,10 @@ export default function PlanPage() {
                             <button
                               type="button"
                               onClick={() => setPicking({ date, slot })}
-                              disabled={working}
                               className="press-effect flex min-w-0 flex-1 items-center gap-2 text-left"
                             >
                               <span className="text-[18px]">
-                                {CATEGORY_EMOJI[dish.category]}
+                                {dishEmoji(dish)}
                               </span>
                               <span className="min-w-0 flex-1 truncate text-[14px] font-bold text-ink">
                                 {dish.name}
@@ -313,7 +311,6 @@ export default function PlanPage() {
                             <button
                               type="button"
                               onClick={() => rollSlot(date, slot)}
-                              disabled={working}
                               aria-label="다시 뽑기"
                               className="press-effect hit-44 shrink-0 rounded-full border border-blue-btn/[.28] px-2 py-1.5 text-[13px] text-blue-btn"
                             >
@@ -322,7 +319,6 @@ export default function PlanPage() {
                             <button
                               type="button"
                               onClick={() => removeSlot(date, slot)}
-                              disabled={working}
                               aria-label="비우기"
                               className="press-effect -m-1.5 p-1.5 text-[12px] font-bold text-[#b3bcc7]"
                             >
@@ -337,7 +333,6 @@ export default function PlanPage() {
                             <button
                               type="button"
                               onClick={() => rollSlot(date, slot)}
-                              disabled={working}
                               className="press-effect hit-44 shrink-0 rounded-full border border-blue-btn/[.28] px-2.5 py-1.5 text-[11px] font-extrabold text-blue-btn"
                             >
                               🎲 뽑기
@@ -345,8 +340,7 @@ export default function PlanPage() {
                             <button
                               type="button"
                               onClick={() => setPicking({ date, slot })}
-                              disabled={working}
-                              className="press-effect hit-44 shrink-0 rounded-full border border-[#d5dce4] bg-white/70 px-2.5 py-1.5 text-[11px] font-extrabold text-[#44515f]"
+                              className="press-effect hit-44 shrink-0 rounded-full border border-[#d5dce4] bg-white/70 px-2.5 py-1.5 text-[11px] font-extrabold text-chip-ink"
                             >
                               선택
                             </button>
@@ -372,7 +366,12 @@ export default function PlanPage() {
             : "메뉴 선택"
         }
         dishes={dishes}
-        onSelect={selectDish}
+        onSelect={(dish) => {
+          if (!picking) return;
+          const target = picking;
+          setPicking(null);
+          assignSlot(target.date, target.slot, dish);
+        }}
       />
 
       {/* 장보기 리스트 바텀시트 */}

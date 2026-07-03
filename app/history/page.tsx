@@ -1,11 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Badge from "@/components/Badge";
-import BottomSheet from "@/components/BottomSheet";
+import ConfirmSheet from "@/components/ConfirmSheet";
+import DishPickerSheet from "@/components/DishPickerSheet";
 import EmptyState from "@/components/EmptyState";
 import SkeletonList from "@/components/Skeleton";
 import { useToast } from "@/components/Toast";
+import { updateCached, useCachedQuery } from "@/lib/cache";
 import {
   addDays,
   dateLabel,
@@ -13,7 +15,7 @@ import {
   startOfWeek,
   todayString,
 } from "@/lib/date-utils";
-import { CATEGORY_COLOR, CATEGORY_EMOJI } from "@/lib/emoji";
+import { CATEGORY_COLOR, dishEmoji } from "@/lib/emoji";
 import {
   deleteMealLog,
   fetchDishesWithLastEaten,
@@ -28,34 +30,19 @@ import {
 } from "@/lib/types";
 
 export default function HistoryPage() {
-  const [logs, setLogs] = useState<MealLogWithDish[] | null>(null);
-  const [dishes, setDishes] = useState<DishWithLastEaten[] | null>(null);
-  const [error, setError] = useState(false);
-  const [logOpen, setLogOpen] = useState(false);
-  const [logSearch, setLogSearch] = useState("");
-  const showToast = useToast();
-
   const today = todayString();
-
-  const reload = useCallback(async () => {
-    try {
-      setError(false);
-      const [logData, dishData] = await Promise.all([
-        fetchMealLogs(),
-        fetchDishesWithLastEaten(),
-      ]);
-      setLogs(logData);
-      setDishes(dishData);
-    } catch {
-      setError(true);
-      setLogs([]);
-      setDishes([]);
-    }
-  }, []);
-
-  useEffect(() => {
-    reload();
-  }, [reload]);
+  const {
+    data: logs,
+    error,
+    reload,
+    mutate: mutateLogs,
+  } = useCachedQuery("logs", fetchMealLogs);
+  const { data: dishes } = useCachedQuery("dishes", fetchDishesWithLastEaten);
+  const [logOpen, setLogOpen] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<MealLogWithDish | null>(
+    null
+  );
+  const showToast = useToast();
 
   // 날짜별 그룹핑 (이미 최근순 정렬됨)
   const groups = useMemo(() => {
@@ -101,7 +88,6 @@ export default function HistoryPage() {
       const cat = log.dish.category as Category;
       counts.set(cat, (counts.get(cat) ?? 0) + 1);
     }
-    // 엔티티 고정 순서(CATEGORIES)로 세그먼트 구성 — 색은 항상 종류를 따라감
     const segments = CATEGORIES.filter((c) => (counts.get(c) ?? 0) > 0).map(
       (c) => ({ category: c, count: counts.get(c)! })
     );
@@ -122,38 +108,56 @@ export default function HistoryPage() {
       .slice(0, 3);
   }, [dishes]);
 
-  async function handleDelete(log: MealLogWithDish) {
-    const name = log.dish?.name ?? "이 기록";
-    if (!window.confirm(`'${name}' 기록을 삭제할까요?`)) return;
+  async function handleDelete() {
+    const log = pendingDelete;
+    setPendingDelete(null);
+    if (!log || log.id.startsWith("temp-")) return;
+    // 낙관적 삭제 + 관련 캐시 무효화
+    mutateLogs((prev) => prev?.filter((l) => l.id !== log.id) ?? prev);
+    updateCached<DishWithLastEaten[]>("dishes", () => null);
+    updateCached<string[]>(`eaten:${today}`, () => null);
+    showToast("기록을 삭제했어요");
     try {
       await deleteMealLog(log.id);
     } catch {
       showToast("삭제에 실패했어요. 잠시 후 다시 시도해주세요");
-      return;
+      reload();
     }
-    showToast("기록을 삭제했어요");
-    reload();
   }
 
-  async function quickLog(dishId: string, name: string) {
+  async function quickLog(dish: DishWithLastEaten) {
+    setLogOpen(false);
+    // 낙관적 추가
+    mutateLogs((prev) =>
+      prev
+        ? [
+            {
+              id: `temp-${Date.now()}`,
+              dish_id: dish.id,
+              eaten_at: today,
+              created_at: new Date().toISOString(),
+              dish,
+            },
+            ...prev,
+          ]
+        : prev
+    );
+    updateCached<DishWithLastEaten[]>("dishes", (ds) =>
+      ds?.map((d) => (d.id === dish.id ? { ...d, last_eaten_at: today } : d)) ??
+      ds
+    );
+    updateCached<string[]>(`eaten:${today}`, (ids) =>
+      ids ? [...ids, dish.id] : ids
+    );
+    showToast(`${dish.name}을(를) 기록했어요`);
     try {
-      await logMeal(dishId);
+      await logMeal(dish.id);
+      reload(); // 임시 id를 실제 데이터로 교체
     } catch {
       showToast("기록에 실패했어요. 잠시 후 다시 시도해주세요");
-      return;
+      reload();
     }
-    setLogOpen(false);
-    showToast(`${name}을(를) 기록했어요`);
-    reload();
   }
-
-  const logCandidates = useMemo(() => {
-    if (!dishes) return [];
-    if (!logSearch) return dishes;
-    return dishes.filter((d) =>
-      d.name.toLowerCase().includes(logSearch.toLowerCase())
-    );
-  }, [dishes, logSearch]);
 
   return (
     <main className="px-5 pb-8 pt-10">
@@ -232,9 +236,7 @@ export default function HistoryPage() {
           <div className="mt-2.5 flex flex-col gap-2">
             {forgotten.map((dish) => (
               <div key={dish.id} className="flex items-center gap-2.5">
-                <span className="text-[18px]">
-                  {CATEGORY_EMOJI[dish.category]}
-                </span>
+                <span className="text-[18px]">{dishEmoji(dish)}</span>
                 <p className="min-w-0 flex-1 truncate text-[14px] font-bold text-ink">
                   {dish.name}
                 </p>
@@ -245,7 +247,7 @@ export default function HistoryPage() {
                 </span>
                 <button
                   type="button"
-                  onClick={() => quickLog(dish.id, dish.name)}
+                  onClick={() => quickLog(dish)}
                   className="press-effect hit-44 shrink-0 rounded-[12px] border border-blue-btn/[.28] px-2.5 py-1.5 text-[11px] font-extrabold text-blue-btn"
                 >
                   먹었어요
@@ -257,11 +259,11 @@ export default function HistoryPage() {
       )}
 
       {/* 타임라인 */}
-      {logs === null ? (
+      {logs === null && !error ? (
         <div className="mt-6">
           <SkeletonList />
         </div>
-      ) : error ? (
+      ) : error && !logs ? (
         <EmptyState
           emoji="😵"
           title="데이터를 불러오지 못했어요"
@@ -269,7 +271,7 @@ export default function HistoryPage() {
           actionLabel="다시 시도"
           onAction={reload}
         />
-      ) : logs.length === 0 ? (
+      ) : (logs ?? []).length === 0 ? (
         <EmptyState
           emoji="🍽️"
           title="아직 먹은 기록이 없어요"
@@ -289,7 +291,7 @@ export default function HistoryPage() {
                     className="glass-card shadow-list-lv flex items-center gap-2.5 rounded-[20px] px-4 py-3"
                   >
                     <span className="text-[20px]">
-                      {log.dish ? CATEGORY_EMOJI[log.dish.category as Category] : "🍽️"}
+                      {log.dish ? dishEmoji(log.dish) : "🍽️"}
                     </span>
                     <p className="min-w-0 flex-1 truncate text-[14px] font-bold text-ink">
                       {log.dish?.name ?? "(삭제된 요리)"}
@@ -301,7 +303,7 @@ export default function HistoryPage() {
                     )}
                     <button
                       type="button"
-                      onClick={() => handleDelete(log)}
+                      onClick={() => setPendingDelete(log)}
                       aria-label="기록 삭제"
                       className="press-effect -m-3 p-3 text-[14px] font-bold text-[#b3bcc7]"
                     >
@@ -319,10 +321,7 @@ export default function HistoryPage() {
       <div className="pointer-events-none fixed bottom-[92px] left-1/2 z-30 flex w-full max-w-[480px] -translate-x-1/2 justify-end px-[18px]">
         <button
           type="button"
-          onClick={() => {
-            setLogSearch("");
-            setLogOpen(true);
-          }}
+          onClick={() => setLogOpen(true)}
           aria-label="직접 기록"
           className="grad-primary press-effect pointer-events-auto flex h-14 w-14 items-center justify-center rounded-full text-[26px] font-light text-white shadow-[0_10px_24px_rgba(42,160,200,.42)]"
         >
@@ -331,50 +330,26 @@ export default function HistoryPage() {
       </div>
 
       {/* 직접 기록 바텀시트 */}
-      <BottomSheet
+      <DishPickerSheet
         open={logOpen}
         onClose={() => setLogOpen(false)}
         title="먹은 요리 기록"
-      >
-        <input
-          className="w-full rounded-[14px] bg-[#f1f4f8] px-4 py-3.5 text-[16px] text-ink placeholder:text-muted outline-none focus:ring-2 focus:ring-grad-start/40"
-          value={logSearch}
-          onChange={(e) => setLogSearch(e.target.value)}
-          placeholder="요리 이름 검색"
-        />
-        <div className="mt-4 flex max-h-[50dvh] flex-col gap-2 overflow-y-auto">
-          {dishes === null ? (
-            <p className="py-8 text-center text-[14px] text-sub">
-              불러오는 중...
-            </p>
-          ) : logCandidates.length === 0 ? (
-            <p className="py-8 text-center text-[14px] text-sub">
-              {dishes.length === 0
-                ? "내 요리 탭에서 요리를 먼저 추가해주세요"
-                : "검색 결과가 없어요"}
-            </p>
-          ) : (
-            logCandidates.map((dish) => (
-              <button
-                key={dish.id}
-                type="button"
-                onClick={() => quickLog(dish.id, dish.name)}
-                className="press-effect flex items-center gap-3 rounded-2xl bg-[#f6f8fb] px-4 py-3 text-left"
-              >
-                <span className="text-[20px]">
-                  {CATEGORY_EMOJI[dish.category]}
-                </span>
-                <span className="min-w-0 flex-1 truncate text-[14px] font-bold text-ink">
-                  {dish.name}
-                </span>
-                <Badge tone="blue" size="sm">
-                  {dish.category}
-                </Badge>
-              </button>
-            ))
-          )}
-        </div>
-      </BottomSheet>
+        dishes={dishes}
+        onSelect={quickLog}
+      />
+
+      {/* 삭제 확인 시트 */}
+      <ConfirmSheet
+        open={pendingDelete !== null}
+        onClose={() => setPendingDelete(null)}
+        title={`'${pendingDelete?.dish?.name ?? "이 기록"}' 기록 삭제`}
+        description={
+          pendingDelete
+            ? `${dateLabel(pendingDelete.eaten_at)}에 먹은 기록이 삭제돼요.`
+            : undefined
+        }
+        onConfirm={handleDelete}
+      />
     </main>
   );
 }
