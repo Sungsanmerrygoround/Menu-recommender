@@ -6,6 +6,7 @@ import type {
   DishWithLastEaten,
   Effort,
   MealLogWithDish,
+  MealPlanWithDish,
 } from "./types";
 
 export interface DishInput {
@@ -76,5 +77,36 @@ export async function fetchMealLogs(): Promise<MealLogWithDish[]> {
 
 export async function deleteMealLog(id: string): Promise<void> {
   const { error } = await supabase.from("meal_logs").delete().eq("id", id);
+  if (error) throw error;
+}
+
+/** 기간 내 식단표 조회 (요리 정보 조인, 날짜순) */
+export async function fetchMealPlans(
+  from: string,
+  to: string
+): Promise<MealPlanWithDish[]> {
+  const { data, error } = await supabase
+    .from("meal_plans")
+    .select("id, plan_date, dish_id, created_at, dish:dishes(*)")
+    .gte("plan_date", from)
+    .lte("plan_date", to)
+    .order("plan_date");
+  if (error) throw error;
+  return (data ?? []) as unknown as MealPlanWithDish[];
+}
+
+/** 특정 날짜의 식단 저장 (이미 있으면 교체) */
+export async function upsertMealPlan(
+  planDate: string,
+  dishId: string
+): Promise<void> {
+  const { error } = await supabase
+    .from("meal_plans")
+    .upsert({ plan_date: planDate, dish_id: dishId }, { onConflict: "plan_date" });
+  if (error) throw error;
+}
+
+export async function deleteMealPlan(id: string): Promise<void> {
+  const { error } = await supabase.from("meal_plans").delete().eq("id", id);
   if (error) throw error;
 }

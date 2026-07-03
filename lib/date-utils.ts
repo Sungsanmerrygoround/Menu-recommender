@@ -18,6 +18,26 @@ export function daysBetween(from: string, to: string): number {
   return Math.round((toDate.getTime() - fromDate.getTime()) / 86_400_000);
 }
 
+/** YYYY-MM-DD에 n일을 더한 날짜 문자열 */
+export function addDays(dateStr: string, n: number): string {
+  const date = new Date(`${dateStr}T00:00:00`);
+  date.setDate(date.getDate() + n);
+  return toDateString(date);
+}
+
+/** 식단표용 미래 날짜 라벨: 오늘 / 내일 / M월 D일 (요일) */
+export function futureDateLabel(
+  dateStr: string,
+  today: string = todayString()
+): string {
+  const diff = daysBetween(today, dateStr);
+  if (diff === 0) return "오늘";
+  if (diff === 1) return "내일";
+  const date = new Date(`${dateStr}T00:00:00`);
+  const weekdays = ["일", "월", "화", "수", "목", "금", "토"];
+  return `${date.getMonth() + 1}월 ${date.getDate()}일 (${weekdays[date.getDay()]})`;
+}
+
 /** 해당 날짜가 속한 주의 시작일(월요일)을 YYYY-MM-DD로 반환 */
 export function startOfWeek(dateStr: string): string {
   const date = new Date(`${dateStr}T00:00:00`);

@@ -29,3 +29,14 @@ export interface DishWithLastEaten extends Dish {
 export interface MealLogWithDish extends MealLog {
   dish: Pick<Dish, "id" | "name" | "category"> | null;
 }
+
+export interface MealPlan {
+  id: string;
+  plan_date: string; // YYYY-MM-DD
+  dish_id: string;
+  created_at: string;
+}
+
+export interface MealPlanWithDish extends MealPlan {
+  dish: Dish | null;
+}
