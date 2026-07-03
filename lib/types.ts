@@ -11,6 +11,8 @@ export interface Dish {
   effort: Effort;
   cook_time: number | null;
   tags: string[];
+  /** 004 마이그레이션 이전 데이터에는 없을 수 있음 */
+  ingredients?: string[];
   created_at: string;
 }
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Badge from "@/components/Badge";
+import BottomSheet from "@/components/BottomSheet";
 import EmptyState from "@/components/EmptyState";
 import SkeletonList from "@/components/Skeleton";
 import { useToast } from "@/components/Toast";
@@ -25,6 +26,8 @@ export default function PlanPage() {
   const [dishes, setDishes] = useState<DishWithLastEaten[] | null>(null);
   const [error, setError] = useState(false);
   const [working, setWorking] = useState(false);
+  const [shopOpen, setShopOpen] = useState(false);
+  const [checked, setChecked] = useState<Record<string, boolean>>({});
   const showToast = useToast();
 
   const today = todayString();
@@ -58,6 +61,59 @@ export default function PlanPage() {
     for (const p of plans ?? []) map.set(p.plan_date, p);
     return map;
   }, [plans]);
+
+  // 장보기 리스트: 이번 주 식단의 재료를 합산 (재료명 → 사용 요리 목록)
+  const shoppingList = useMemo(() => {
+    const map = new Map<string, string[]>();
+    for (const p of plans ?? []) {
+      if (!p.dish) continue;
+      for (const ing of p.dish.ingredients ?? []) {
+        const users = map.get(ing) ?? [];
+        users.push(p.dish.name);
+        map.set(ing, users);
+      }
+    }
+    return [...map.entries()]
+      .map(([name, usedBy]) => ({ name, usedBy }))
+      .sort(
+        (a, b) => b.usedBy.length - a.usedBy.length || a.name.localeCompare(b.name)
+      );
+  }, [plans]);
+
+  // 체크 상태는 주(시작일) 단위로 로컬에 저장
+  const checkedKey = `shopping-checked:${today}`;
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(checkedKey);
+      if (saved) setChecked(JSON.parse(saved));
+    } catch {}
+  }, [checkedKey]);
+
+  function toggleChecked(name: string) {
+    setChecked((prev) => {
+      const next = { ...prev, [name]: !prev[name] };
+      try {
+        localStorage.setItem(checkedKey, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }
+
+  async function copyShoppingList() {
+    const lines = shoppingList
+      .filter((item) => !checked[item.name])
+      .map((item) => `- ${item.name}`);
+    if (lines.length === 0) {
+      showToast("복사할 항목이 없어요");
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(`🛒 장보기 리스트\n${lines.join("\n")}`);
+      showToast("장보기 리스트를 복사했어요");
+    } catch {
+      showToast("복사에 실패했어요");
+    }
+  }
 
   /** 이번 주에 이미 배정된 요리 id 목록 (중복 방지용) */
   function plannedDishIds(except?: string): string[] {
@@ -180,6 +236,13 @@ export default function PlanPage() {
           >
             {working ? "채우는 중..." : "빈 날 채우기 ✨"}
           </button>
+          <button
+            type="button"
+            onClick={() => setShopOpen(true)}
+            className="glass-surface press-effect mt-2.5 h-[48px] w-full rounded-[20px] text-[14px] font-bold text-[#44515f]"
+          >
+            🛒 장보기 리스트
+          </button>
 
           <div className="mt-5 flex flex-col gap-2.5">
             {dates.map((date) => {
@@ -244,6 +307,67 @@ export default function PlanPage() {
           </div>
         </>
       )}
+
+      {/* 장보기 리스트 바텀시트 */}
+      <BottomSheet
+        open={shopOpen}
+        onClose={() => setShopOpen(false)}
+        title="장보기 리스트 🛒"
+      >
+        {shoppingList.length === 0 ? (
+          <p className="py-8 text-center text-[14px] leading-relaxed text-sub">
+            {(plans ?? []).length === 0
+              ? "먼저 식단을 채워주세요"
+              : "이번 주 요리에 등록된 재료가 없어요.\n내 요리에서 재료를 채워보세요"}
+          </p>
+        ) : (
+          <>
+            <div className="flex max-h-[50dvh] flex-col gap-1.5 overflow-y-auto">
+              {shoppingList.map((item) => {
+                const done = !!checked[item.name];
+                return (
+                  <button
+                    key={item.name}
+                    type="button"
+                    onClick={() => toggleChecked(item.name)}
+                    className="press-effect flex items-center gap-3 rounded-2xl bg-[#f6f8fb] px-4 py-3 text-left"
+                  >
+                    <span
+                      className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-[7px] text-[13px] font-black text-white ${
+                        done ? "grad-primary" : "border border-[#d5dce4] bg-white"
+                      }`}
+                    >
+                      {done ? "✓" : ""}
+                    </span>
+                    <span
+                      className={`min-w-0 flex-1 truncate text-[14px] font-bold ${
+                        done ? "text-muted line-through" : "text-ink"
+                      }`}
+                    >
+                      {item.name}
+                      {item.usedBy.length > 1 && (
+                        <b className="ml-1 font-extrabold text-blue-acc">
+                          ×{item.usedBy.length}
+                        </b>
+                      )}
+                    </span>
+                    <span className="max-w-[40%] truncate text-[11px] font-semibold text-muted">
+                      {item.usedBy.join(", ")}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              onClick={copyShoppingList}
+              className="grad-primary shadow-btn-grad press-effect mt-4 h-[50px] w-full rounded-2xl text-[14px] font-extrabold text-white"
+            >
+              남은 항목 복사하기
+            </button>
+          </>
+        )}
+      </BottomSheet>
     </main>
   );
 }

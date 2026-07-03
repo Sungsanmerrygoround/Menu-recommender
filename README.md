@@ -21,9 +21,12 @@ npm run dev
 
 1. https://supabase.com/dashboard 접속 → 프로젝트(`sucwpjnsmyqbnmncoxzx`) 클릭
 2. 왼쪽 메뉴에서 **SQL Editor** 클릭 → **New query** 클릭
-3. 이 레포의 [`supabase/migrations/001_schema.sql`](supabase/migrations/001_schema.sql) 파일 내용을 전부 복사해 붙여넣고 **Run** 클릭
-4. 성공하면 같은 방법으로 [`supabase/migrations/002_seed.sql`](supabase/migrations/002_seed.sql) 내용을 붙여넣고 **Run** 클릭 (예시 요리 20개 입력)
-5. 앱을 새로고침하면 요리 목록이 보여요
+3. `supabase/migrations/` 폴더의 SQL 파일을 **번호 순서대로** 복사해 붙여넣고 **Run**:
+   - [`001_schema.sql`](supabase/migrations/001_schema.sql) — 기본 테이블 (dishes, meal_logs)
+   - [`002_seed.sql`](supabase/migrations/002_seed.sql) — 예시 요리 20개
+   - [`003_meal_plans.sql`](supabase/migrations/003_meal_plans.sql) — 주간 식단표 테이블
+   - [`004_ingredients.sql`](supabase/migrations/004_ingredients.sql) — 재료 컬럼 + 시드 요리 재료
+4. 앱을 새로고침하면 됩니다 (이미 001/002를 실행했다면 003/004만 실행)
 
 ### 2. GitHub에 push
 

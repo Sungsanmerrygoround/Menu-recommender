@@ -233,6 +233,7 @@ export default function DishesPage() {
               effort: editing.effort,
               cook_time: editing.cook_time,
               tags: editing.tags,
+              ingredients: editing.ingredients ?? [],
             }}
             onSubmit={handleUpdate}
             onDelete={handleDelete}

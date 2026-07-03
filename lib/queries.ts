@@ -15,6 +15,7 @@ export interface DishInput {
   effort: Effort;
   cook_time: number | null;
   tags: string[];
+  ingredients?: string[];
 }
 
 /** 전체 요리 + 각 요리의 마지막 취식일(meal_logs의 max(eaten_at))을 조회 */
@@ -38,14 +39,29 @@ export async function fetchDishesWithLastEaten(): Promise<DishWithLastEaten[]> {
   }));
 }
 
-export async function addDish(input: DishInput): Promise<void> {
-  const { error } = await supabase.from("dishes").insert(input);
+/** 004(ingredients 컬럼) 미적용 DB에서도 동작하도록 컬럼 오류 시 재시도 */
+async function writeDish(
+  input: DishInput,
+  write: (
+    payload: Partial<DishInput>
+  ) => PromiseLike<{ error: { message: string } | null }>
+): Promise<void> {
+  let { error } = await write(input);
+  if (error && /ingredients/.test(error.message)) {
+    const { ingredients: _omit, ...rest } = input;
+    ({ error } = await write(rest));
+  }
   if (error) throw error;
 }
 
+export async function addDish(input: DishInput): Promise<void> {
+  await writeDish(input, (payload) => supabase.from("dishes").insert(payload));
+}
+
 export async function updateDish(id: string, input: DishInput): Promise<void> {
-  const { error } = await supabase.from("dishes").update(input).eq("id", id);
-  if (error) throw error;
+  await writeDish(input, (payload) =>
+    supabase.from("dishes").update(payload).eq("id", id)
+  );
 }
 
 export async function deleteDish(id: string): Promise<void> {

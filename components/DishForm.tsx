@@ -27,6 +27,9 @@ export default function DishForm({
     initial?.cook_time != null ? String(initial.cook_time) : ""
   );
   const [tagsText, setTagsText] = useState(initial?.tags.join(", ") ?? "");
+  const [ingredientsText, setIngredientsText] = useState(
+    initial?.ingredients?.join(", ") ?? ""
+  );
   const [submitting, setSubmitting] = useState(false);
 
   const valid = name.trim().length > 0 && category !== null && effort !== null;
@@ -42,6 +45,10 @@ export default function DishForm({
         effort: effort!,
         cook_time: Number.isNaN(parsedTime) ? null : parsedTime,
         tags: tagsText
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+        ingredients: ingredientsText
           .split(",")
           .map((t) => t.trim())
           .filter(Boolean),
@@ -112,6 +119,18 @@ export default function DishForm({
           value={cookTime}
           onChange={(e) => setCookTime(e.target.value)}
           placeholder="예: 30"
+        />
+      </div>
+
+      <div>
+        <label className="mb-2 block text-[12px] font-extrabold text-sub">
+          재료
+        </label>
+        <input
+          className={inputClass}
+          value={ingredientsText}
+          onChange={(e) => setIngredientsText(e.target.value)}
+          placeholder="쉼표로 구분 (예: 김치, 돼지고기, 두부)"
         />
       </div>
 
