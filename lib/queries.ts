@@ -142,3 +142,62 @@ export async function deleteMealPlan(id: string): Promise<void> {
   const { error } = await supabase.from("meal_plans").delete().eq("id", id);
   if (error) throw error;
 }
+
+// ---- 데이터 백업/복원 ----
+
+export interface BackupData {
+  version: 1;
+  exported_at: string;
+  dishes: Record<string, unknown>[];
+  meal_logs: Record<string, unknown>[];
+  meal_plans: Record<string, unknown>[];
+}
+
+export async function exportAllData(): Promise<BackupData> {
+  const [d, l, p] = await Promise.all([
+    supabase.from("dishes").select("*"),
+    supabase.from("meal_logs").select("*"),
+    supabase.from("meal_plans").select("*"),
+  ]);
+  if (d.error) throw d.error;
+  if (l.error) throw l.error;
+  return {
+    version: 1,
+    exported_at: new Date().toISOString(),
+    dishes: d.data ?? [],
+    meal_logs: l.data ?? [],
+    // meal_plans 테이블이 없는 환경(003 미적용)도 허용
+    meal_plans: p.error ? [] : (p.data ?? []),
+  };
+}
+
+/** 백업 병합 복원: id 기준 upsert (기존 데이터는 유지, 백업 내용이 우선) */
+export async function importAllData(backup: BackupData): Promise<void> {
+  if (backup.dishes.length > 0) {
+    let { error } = await supabase
+      .from("dishes")
+      .upsert(backup.dishes, { onConflict: "id" });
+    if (error && /(ingredients|emoji)/.test(error.message)) {
+      // 미적용 마이그레이션 컬럼 제거 후 재시도
+      const stripped = backup.dishes.map(
+        ({ ingredients: _i, emoji: _e, ...rest }) => rest
+      );
+      ({ error } = await supabase
+        .from("dishes")
+        .upsert(stripped, { onConflict: "id" }));
+    }
+    if (error) throw error;
+  }
+  if (backup.meal_logs.length > 0) {
+    const { error } = await supabase
+      .from("meal_logs")
+      .upsert(backup.meal_logs, { onConflict: "id" });
+    if (error) throw error;
+  }
+  if (backup.meal_plans.length > 0) {
+    const { error } = await supabase
+      .from("meal_plans")
+      .upsert(backup.meal_plans, { onConflict: "id" });
+    if (error) throw error;
+  }
+}

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Badge from "@/components/Badge";
 import Chip from "@/components/Chip";
 import EmptyState from "@/components/EmptyState";
+import SettingsSheet from "@/components/SettingsSheet";
 import { useToast } from "@/components/Toast";
 import Link from "next/link";
 import { updateCached, useCachedQuery } from "@/lib/cache";
@@ -76,6 +77,7 @@ export default function HomePage() {
   const [noCandidates, setNoCandidates] = useState(false);
   const [rolling, setRolling] = useState(false); // 룰렛 연출 중
   const [rollingDish, setRollingDish] = useState<DishWithLastEaten | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const rollTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const showToast = useToast();
 
@@ -206,9 +208,19 @@ export default function HomePage() {
 
   return (
     <main className="px-5 pb-8 pt-10">
-      <span className="glass-surface inline-flex items-center gap-1.5 rounded-full px-[13px] py-[7px] text-[12px] font-bold text-blue-acc">
-        🥗 신선한 한 끼 어때요?
-      </span>
+      <div className="flex items-center justify-between">
+        <span className="glass-surface inline-flex items-center gap-1.5 rounded-full px-[13px] py-[7px] text-[12px] font-bold text-blue-acc">
+          🥗 신선한 한 끼 어때요?
+        </span>
+        <button
+          type="button"
+          onClick={() => setSettingsOpen(true)}
+          aria-label="설정"
+          className="glass-surface press-effect hit-44 flex h-9 w-9 items-center justify-center rounded-full text-[15px]"
+        >
+          ⚙️
+        </button>
+      </div>
       <h1 className="mt-3.5 text-[32px] font-black leading-[1.25] tracking-[-0.02em] text-ink">
         오늘 뭐
         <br />
@@ -416,6 +428,12 @@ export default function HomePage() {
           description="필터를 조금 풀어보시겠어요?"
         />
       )}
+
+      {/* 설정 (백업/복원) */}
+      <SettingsSheet
+        open={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+      />
     </main>
   );
 }
