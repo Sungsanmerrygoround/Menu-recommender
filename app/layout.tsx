@@ -6,6 +6,11 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "오늘 뭐 해먹지",
   description: "오늘 먹을 집밥 메뉴를 추천해드려요",
+  appleWebApp: {
+    capable: true,
+    title: "뭐해먹지",
+    statusBarStyle: "default",
+  },
 };
 
 export const viewport: Viewport = {
