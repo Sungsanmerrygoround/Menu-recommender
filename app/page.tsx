@@ -118,6 +118,7 @@ export default function HomePage() {
         ? [
             {
               id: `temp-${Date.now()}`,
+              room_id: dish.room_id,
               dish_id: dish.id,
               eaten_at: today,
               created_at: new Date().toISOString(),
@@ -208,7 +209,7 @@ export default function HomePage() {
 
   return (
     <main className="px-5 pb-8 pt-10">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-2">
         <span className="glass-surface inline-flex items-center gap-1.5 rounded-full px-[13px] py-[7px] text-[12px] font-bold text-blue-acc">
           🥗 신선한 한 끼 어때요?
         </span>

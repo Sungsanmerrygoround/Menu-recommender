@@ -1,3 +1,10 @@
+export interface Room {
+  id: string;
+  code: string; // 예: TOFU-3942
+  name: string; // 예: 한준네 부엌
+  created_at: string;
+}
+
 export const CATEGORIES = ["한식", "중식", "양식", "일식", "분식/기타"] as const;
 export type Category = (typeof CATEGORIES)[number];
 
@@ -6,6 +13,7 @@ export type Effort = (typeof EFFORTS)[number];
 
 export interface Dish {
   id: string;
+  room_id: string;
   name: string;
   category: Category;
   effort: Effort;
@@ -20,6 +28,7 @@ export interface Dish {
 
 export interface MealLog {
   id: string;
+  room_id: string;
   dish_id: string;
   eaten_at: string; // YYYY-MM-DD
   created_at: string;
@@ -39,6 +48,7 @@ export type MealSlot = (typeof MEAL_SLOTS)[number];
 
 export interface MealPlan {
   id: string;
+  room_id: string;
   plan_date: string; // YYYY-MM-DD
   meal_slot: MealSlot;
   dish_id: string;

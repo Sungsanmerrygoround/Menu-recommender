@@ -15,6 +15,7 @@ function dish(
 ): DishWithLastEaten {
   return {
     id,
+    room_id: "test-room",
     name: `요리-${id}`,
     category: "한식",
     effort: "쉬움",

@@ -13,6 +13,11 @@ export function getCached<T>(key: string): T | null {
   return (store.get(key) as T) ?? null;
 }
 
+/** 방 생성/입장 직후 이전 방의 잔류 데이터를 비운다. */
+export function resetCache() {
+  store.clear();
+}
+
 /** 화면 밖(다른 탭)의 캐시를 갱신할 때 사용 — 다음 방문 시 즉시 반영됨 */
 export function updateCached<T>(key: string, fn: (prev: T | null) => T | null) {
   const next = fn(getCached<T>(key));

@@ -2,6 +2,8 @@ import type { Metadata, Viewport } from "next";
 import BottomNav from "@/components/BottomNav";
 import SwRegister from "@/components/SwRegister";
 import { ToastProvider } from "@/components/Toast";
+import { RoomProvider, RoomGate } from "@/components/RoomProvider";
+import RoomHeader from "@/components/RoomHeader";
 import "./globals.css";
 
 const SPLASH = [
@@ -54,18 +56,24 @@ export default function RootLayout({
       <body>
         <SwRegister />
         <ToastProvider>
-          {/* 고정 배경: 그라디언트 + 블롭 (스크롤과 무관하게 유지) */}
-          <div className="pointer-events-none fixed inset-0 z-0 flex justify-center">
-            <div className="app-bg relative h-full w-full max-w-[480px] overflow-hidden">
-              <div className="blob blob-1" />
-              <div className="blob blob-2" />
-              <div className="blob blob-3" />
+          <RoomProvider>
+            {/* 고정 배경: 그라디언트 + 블롭 (게이트 밖 → 첫 화면에서도 표시) */}
+            <div className="pointer-events-none fixed inset-0 z-0 flex justify-center">
+              <div className="app-bg relative h-full w-full max-w-[480px] overflow-hidden">
+                <div className="blob blob-1" />
+                <div className="blob blob-2" />
+                <div className="blob blob-3" />
+              </div>
             </div>
-          </div>
-          <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[480px] pb-[calc(8rem+env(safe-area-inset-bottom))]">
-            {children}
-          </div>
-          <BottomNav />
+            {/* 방이 있을 때만 실제 앱을 렌더, 없으면 RoomGate가 첫 화면 표시 */}
+            <RoomGate>
+              <div className="relative z-10 mx-auto min-h-dvh w-full max-w-[480px] pb-[calc(8rem+env(safe-area-inset-bottom))]">
+                {children}
+              </div>
+              <RoomHeader />
+              <BottomNav />
+            </RoomGate>
+          </RoomProvider>
         </ToastProvider>
       </body>
     </html>

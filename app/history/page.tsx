@@ -133,6 +133,7 @@ export default function HistoryPage() {
         ? [
             {
               id: `temp-${Date.now()}`,
+              room_id: dish.room_id,
               dish_id: dish.id,
               eaten_at: today,
               created_at: new Date().toISOString(),

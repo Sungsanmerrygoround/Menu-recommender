@@ -80,6 +80,7 @@ export default function PlanPage() {
     const current = planBySlot.get(slotKey(date, slot));
     const optimistic: MealPlanWithDish = {
       id: current?.id ?? `temp-${Date.now()}`,
+      room_id: dish.room_id,
       plan_date: date,
       meal_slot: slot,
       dish_id: dish.id,
